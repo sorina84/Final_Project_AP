@@ -3,6 +3,26 @@ using System.Drawing;
 
 public class Player : GameEntity
 {
+    public Image Sprite {get ; private set;}//*
+
+    public float X {get; set ;}
+    public float Y {get; set;}
+
+    public int Width => Sprite?.Width ?? 50;
+    public int Hieght => Sprite?.Hieght ?? 50;
+
+    public void LoadSprite()
+    {
+        try
+        {
+            Sprite = Image.FromFile("Assets/player_ship.png");
+        }
+        catch
+        {
+            Sprite = null;
+        }
+    }
+    
     public int Heath {get; private set ; }
     public int Score {get; private set ; }
     public float VelocityX {get; private set ; }

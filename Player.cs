@@ -74,7 +74,6 @@ public class Player : GameEntity
         X = Math.Clamp(X , 0 , 800);
         Y = Math.Clamp(Y , 0 , 600);
     }
-
     public override void Draw(Graphic g)
     {
         if(!IsActive)

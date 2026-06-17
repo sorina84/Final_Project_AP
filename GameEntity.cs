@@ -38,6 +38,6 @@ public abstract class GameEntity
         _speed = speed;
         _isActive = true;
     }
-    public abstract void Update();
+    public abstract void Update(float deltaTime);
     public abstract void Draw();
 }

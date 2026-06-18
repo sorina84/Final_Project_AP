@@ -7,24 +7,24 @@ public class Bullet : GameEntity
     public bool IsPlayerBullet {get ;set;}
 
     public Bullet(float x ,float y , float speedY , bool isPlayerBullet)
-    :base ( x ,y , Math.abs(speedY))
+    :base ( x ,y , Math.Abs(speedY))
     {
         IsPlayerBullet = isPlayerBullet;
-        speed = isPlayerBullet ? -Math.abs(speedY) : Math.abs(speedY);
+        Speed = isPlayerBullet ? -Math.Abs(speedY) : Math.Abs(speedY);
     }
 
-    public override void Update()
+    public override void Update(float deltaTime)
     {
         if(!IsActive)
             return;
 
-        Y += Speed;
+        Y += Speed * deltaTime;
 
         if(Y < -10 || Y > 650 )
             IsActive = false;
     }
 
-    public override void Draw(Graphic g)
+    public override void Draw(Graphics g)
     {
         if(!IsActive)
             return;

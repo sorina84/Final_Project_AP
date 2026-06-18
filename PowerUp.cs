@@ -26,19 +26,19 @@ public class PowerUp : GameEntity
     public PowerUpType Type {get; private set;}
     public float Radius {get;private set;} = 12f;
 
-    public PowerUp(float x , float y , PowerUp type)
+    public PowerUp(float x , float y , PowerUpType type)
     :base(x ,y ,1.5f)
     {
         Type = type;
         IsActive = true;
     }
 
-    public override void Update()
+    public override void Update(float deltaTime)
     {
         if(!IsActive)
             return;
 
-        Y += Speed;
+        Y += Speed*deltaTime;
 
         if( Y > 650)
             IsActive = false;
@@ -72,6 +72,7 @@ public class PowerUp : GameEntity
             case "TripleShot":
             {
                 brush = Brushes.Orange;
+                break;
             }
             default:
                 brush = Brushes.White;

@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 
+<<<<<<< Updated upstream
 public class PowerUp : GameEntity
 {
     public enum PowerUpType
@@ -10,6 +11,18 @@ public class PowerUp : GameEntity
         Shield,
         TripleShot
     }
+=======
+public enum PowerUpType
+{
+    HealthPack,
+    FireRateBoost,
+    Shield,
+    TripleShot
+}
+
+public class PowerUp : GameEntity
+{
+>>>>>>> Stashed changes
     public PowerUpType Type {get; private set;}
     public float Radius {get;private set;} = 12f;
 

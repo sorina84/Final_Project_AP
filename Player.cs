@@ -1,15 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 public class Player : GameEntity
 {
     public Image Sprite {get ; private set;}//*
 
-    public float X {get; set ;}
-    public float Y {get; set;}
-
     public int Width => Sprite?.Width ?? 50;
-    public int Hieght => Sprite?.Hieght ?? 50;
+    public int Height => Sprite?.Height ?? 50;
     
     public int Health {get; private set ; }
     public int Score {get; private set ; }
@@ -49,10 +47,21 @@ public class Player : GameEntity
         return _timeSinceLastShot >= ShootCooldown;
     }
 
-    public Bullet Shoot()
+    public List<Bullet> Shoot()
     {
-        _timeSinceLastShot = 0f;
-        return new Bullet (X ,Y - Hieght /2f , 10f , isPlayerBullet = true);
+        var bullets = new List<Bullet>();
+
+        if(IsTripleShot)
+        {
+            bullets.Add(new Bullet (X , Y-25 , 10f , true)); //*
+            bullets.Add(new Bullet (X-12 , Y-20 , 10f , true));
+            bullets.Add(new Bullet (X +12 ,Y -20 ,10f , true));
+        }
+        else{
+            bullets.Add(new Bullet(X , Y-25 , 10f , true));
+        }
+
+        return bullets;
     }
 
     public void MoveLeft()
@@ -125,16 +134,16 @@ public class Player : GameEntity
         Y += VelocityY;
 
         float halfWidth = Width / 2f;
-        float halfHiegth = Hieght / 2f;
+        float halfHeight = Height / 2f;
 
         if(X - halfWidth < 0)
         {
             X = halfWidth ; 
             VelocityX = 0;
         }
-        if(Y - halfHiegth < 0)
+        if(Y - halfHeight < 0)
         {
-            Y = halfHiegth;
+            Y = halfHeight;
             VelocityY = 0;
         }
         if(X + halfWidth > 800)
@@ -142,9 +151,9 @@ public class Player : GameEntity
             X = 800 - halfWidth;
             VelocityX = 0;
         }
-        if(Y + halfHiegth > 600)
+        if(Y + halfHeight > 600)
         {
-            Y = 600 - halfHiegth;
+            Y = 600 - halfHeight;
             VelocityY = 0;
         }
 
@@ -166,26 +175,24 @@ public class Player : GameEntity
             if(_fireARateBoostTimer <= 0 ) IsFireRateBoost = false;
         }
     }
-    public override void Draw(Graphic g)
+    public override void Draw(Graphics g)
     {
         if(!IsActive)
             return;
-
         if(Sprite != null)
         {
-            g.DrawImage(Sprite , X - Width/2f , Y - Hieght/2f , Width ,Hieght);
+            g.DrawImage(Sprite , X - Width/2f , Y - Height/2f , Width ,Height);
+        }
+        if(IsShield)
+        {
+            g.DrawEllipse(Pens.Cyan , X -3 , Y -3 , 60 , 60);
         }
         else{
-            pointF[] ship = {new pointF(X , Y -20),
-                new pointF(X -15 , Y +20 ),
-                new pointF(X +15 , Y +20)
+            PointF[] ship = {new PointF(X , Y -20),
+                new PointF(X -15 , Y +20 ),
+                new PointF(X +15 , Y +20)
             };
-            g.FillPolygon(Brushes.Cyan , Ship);
+            g.FillPolygon(Brushes.Cyan , ship);
         }
-    }
-    public override void Draw(Graphics g)
-    {
-        if(IsShield)
-            g.DrawEllipse(Pens.Cyan , X -3 , Y -3 , 60 , 60);
     }
 }

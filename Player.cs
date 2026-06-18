@@ -39,7 +39,7 @@ public class Player : GameEntity
     private const float Friction = 0.92f;
     private const float MaxSpeed = 8f;
 
-    private const float ShootCooldown = 0.2f;
+    private float ShootCooldown = 0.2f;
     private float _timeSinceLastShot = 0f;
 
     public bool CanShoot()
@@ -49,6 +49,7 @@ public class Player : GameEntity
 
     public List<Bullet> Shoot()
     {
+        _timeSinceLastShot = 0f;
         var bullets = new List<Bullet>();
 
         if(IsTripleShot)
@@ -89,7 +90,7 @@ public class Player : GameEntity
     private float _tripleShotTimer = 0f;
     private float _fireARateBoostTimer = 0f;
 
-    public void ActivatePowerUp(PowerUp type)
+    public void ActivatePowerUp(PowerUpType type)
     {
         switch(type)
         {
@@ -113,7 +114,8 @@ public class Player : GameEntity
             case PowerUpType.FireRateBoost:
             {
                 IsFireRateBoost = true;
-                _fireARateBoostTimer = 10f;
+                _fireRateBoostTimer = 10f;
+                ShootCooldown = 0.1f;
                 break;
             }
         }
@@ -127,8 +129,8 @@ public class Player : GameEntity
         VelocityX *= Friction;
         VelocityY *= Friction;
 
-        VelocityX = Math.Clamp(VelocityX , _MaxSpeed , MaxSpeed); //*
-        VelocityY = Math.Clamp(VelocityY , _MaxSpeed , MaxSpeed);
+        VelocityX = Math.Clamp(VelocityX , -MaxSpeed , MaxSpeed); //*
+        VelocityY = Math.Clamp(VelocityY , -MaxSpeed , MaxSpeed);
 
         X += VelocityX;
         Y += VelocityY;
@@ -172,20 +174,26 @@ public class Player : GameEntity
         if(IsFireRateBoost)
         {
             _fireARateBoostTimer -= deltaTime;
-            if(_fireARateBoostTimer <= 0 ) IsFireRateBoost = false;
+            if(_fireARateBoostTimer <= 0 )
+            {
+                IsFireRateBoost = false;
+                ShootCooldown = 0.2f;
+            }
         }
     }
     public override void Draw(Graphics g)
     {
         if(!IsActive)
             return;
-        if(Sprite != null)
-        {
-            g.DrawImage(Sprite , X - Width/2f , Y - Height/2f , Width ,Height);
-        }
+
         if(IsShield)
         {
             g.DrawEllipse(Pens.Cyan , X -3 , Y -3 , 60 , 60);
+        }
+
+        if(Sprite != null)
+        {
+            g.DrawImage(Sprite , X - Width/2f , Y - Height/2f , Width ,Height);
         }
         else{
             PointF[] ship = {new PointF(X , Y -20),

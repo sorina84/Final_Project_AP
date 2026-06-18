@@ -72,7 +72,45 @@ public class Player : GameEntity
         VelocityY += Acceleration;
     }
 
-   public override void Update(float deltaTime)
+    public bool IsShield {get;private set;}
+    public bool IsTripleShot {get; private set;}
+    public bool IsFireRateBoost {get; private set;}
+
+    private float _shieldTimer = 0f;
+    private float _tripleShotTimer = 0f;
+    private float _fireARateBoostTimer = 0f;
+
+    public void ActivatePowerUp(PowerUp type)
+    {
+        switch(type)
+        {
+            case PowerUpType.HealthPack:
+            {
+                Health = Math.Min(Health +40 , 100);
+                break;
+            }
+            case PowerUpType.Shield:
+            {
+                IsShield = true;
+                _shieldTimer = 5f;
+                break;
+            }
+            case PowerUpType.TripleShot:
+            {
+                IsTripleShot = true;
+                _tripleShotTimer = 10f;
+                break;
+            }
+            case PowerUpType.FireRateBoost:
+            {
+                IsFireRateBoost = true;
+                _fireARateBoostTimer = 10f;
+                break;
+            }
+        }
+    }
+
+    public override void Update(float deltaTime)
     {
         if(!IsActive)
             return;
@@ -111,6 +149,22 @@ public class Player : GameEntity
         }
 
         _timeSinceLastShot += deltaTime;
+
+        if(IsShield)
+        {
+            _shieldTimer -= deltaTime;
+            if(_shieldTimer <= 0 ) IsShield = false;
+        }
+        if(IsTripleShot)
+        {
+            _tripleShotTimer -= deltaTime;
+            if(_tripleShotTimer <= 0 ) IsTripleShot = false;
+        }
+        if(IsFireRateBoost)
+        {
+            _fireARateBoostTimer -= deltaTime;
+            if(_fireARateBoostTimer <= 0 ) IsFireRateBoost = false;
+        }
     }
     public override void Draw(Graphic g)
     {
@@ -128,5 +182,10 @@ public class Player : GameEntity
             };
             g.FillPolygon(Brushes.Cyan , Ship);
         }
+    }
+    public override void Draw(Graphics g)
+    {
+        if(IsShield)
+            g.DrawEllipse(Pens.Cyan , X -3 , Y -3 , 60 , 60);
     }
 }

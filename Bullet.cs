@@ -4,6 +4,7 @@ using System.Drawing;
 
 public class Bullet : GameEntity
 {
+    public int Damage { get; set; }
     public bool IsPlayerBullet {get ;set;}
 
     public Bullet(float x ,float y , float speedY , bool isPlayerBullet)

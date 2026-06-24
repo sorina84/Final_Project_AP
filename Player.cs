@@ -8,7 +8,10 @@ public class Player : GameEntity
 
     public int Width => Sprite?.Width ?? 50;
     public int Height => Sprite?.Height ?? 50;
-    
+
+    public int Lives { get; set; }
+    public int FireRate { get; set; }
+
     public int Health {get; private set ; }
     public int Score {get; private set ; }
     public float VelocityX {get; private set ; }
@@ -20,6 +23,8 @@ public class Player : GameEntity
         Score =0;
         VelocityX =0f;
         VelocityY =0f;
+        Lives = 3;
+        FireRate = 200;
         LoadSprite();
     }
 

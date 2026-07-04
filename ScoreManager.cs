@@ -15,5 +15,12 @@ namespace GameObject
         {
             Score = 0;
         }
+        public static void SetScore(int score)
+        {
+            Score = score;
+
+            if (Score < 0)
+                Score = 0;
+        }
     }
 }

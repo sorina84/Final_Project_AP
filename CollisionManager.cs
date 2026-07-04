@@ -4,74 +4,101 @@ using System.Linq;
 
 namespace GameObject
 {
-    public static class CollisionManager 
+    public static class CollisionManager
     {
-        public static void CheckCollisions(List<Bullet> bullets,List<Enemy> enemies,Player player)
+        public static void CheckCollisions(Player player, List<Enemy> enemies, List<Bullet> bullets)
         {
-            if (player.IsDestroyed) return;
-            PlayerBullet(bullets, enemies);
-            EnemyBullet(bullets, player);
-            EnemyPlayer(enemies, player);
-        }
-
-
-
-        //  Bullets --> enemy 
-        public static void PlayerBullet(List<Bullet> bs, List<Enemy> es)
-        {
-
-            foreach(var bullet in bs.ToList())
+            //  Bullets --> enemy 
+            foreach (Bullet bullet in bullets)
             {
-                if (!bullet.IsPlayerBullet)
+                if (!bullet.IsActive || !bullet.IsPlayerBullet)
                     continue;
-                foreach(var enemy in es.ToList())
+
+                foreach (Enemy enemy in enemies)
                 {
-                    if (enemy.Hp > 0 && bullet.Bounds.IntersectsWith(enemy.Bounds))
+                    if (!enemy.IsActive)
+                        continue;
+
+                    if (bullet.Bounds.IntersectsWith(enemy.Bounds))
                     {
                         enemy.Hp -= bullet.Damage;
-                        bs.Remove(bullet);
+
+                        bullet.IsActive = false;
+
                         if (enemy.Hp <= 0)
                         {
+                            enemy.IsActive = false;
+
                             ScoreManager.AddScore(enemy.ScoreValue);
                             CoinManager.AddCoins(enemy.CoinValue);
-                            es.Remove(enemy);
                         }
+
                         break;
                     }
                 }
             }
 
-        }
-        // bullets --> Player
-        public static void EnemyBullet(List<Bullet> bs, Player player)
-        {
-            foreach(var bullet in bs.ToList())
+            //Enemy --> player
+            foreach (Enemy enemy in enemies)
             {
-                if (bullet.IsPlayerBullet)
+                if (!enemy.IsActive)
                     continue;
+
+                if (enemy.Bounds.IntersectsWith(player.Bounds))
+                {
+                    enemy.IsActive = false;
+
+                    if (!player.IsShield)
+                    {
+                        player.Hp -= 20;
+
+                        if (player.Hp <= 0)
+                        {
+                            player.Lives--;
+
+                            if (player.Lives > 0)
+                            {
+                                player.Reset();
+                            }
+                            else
+                            {
+                                player.IsActive = false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // bullets --> Player
+            foreach (Bullet bullet in bullets)
+            {
+                if (!bullet.IsActive || bullet.IsPlayerBullet)
+                    continue;
+
                 if (bullet.Bounds.IntersectsWith(player.Bounds))
                 {
-                    player.Hp -= bullet.Damage;
-                    bs.Remove(bullet);
+                    bullet.IsActive = false;
+
+                    if (!player.IsShield)
+                    {
+                        player.Hp -= bullet.Damage;
+
+                        if (player.Hp <= 0)
+                        {
+                            player.Lives--;
+
+                            if (player.Lives > 0)
+                            {
+                                player.Reset();
+                            }
+                            else
+                            {
+                                player.IsActive = false;
+                            }
+                        }
+                    }
                 }
             }
-
         }
-
-        //Enemy --> player
-        private static void EnemyPlayer(List<Enemy> es ,Player player)
-        {
-            foreach (var enemy in es.ToList())
-            {
-                if (enemy.Hp > 0 && enemy.Bounds.IntersectsWith(player.Bounds))
-                {
-                    player.Hp -= 20;
-
-                    enemy.Hp = 0;
-                    es.Remove(enemy);
-                }
-            }
-        }
-
     }
 }

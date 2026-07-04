@@ -7,105 +7,150 @@ namespace GameObject
 {
     public class WaveManager
     {
-        public int CurrentWave { get; set; }
-        private Random rand; 
+        private readonly Random random = new Random();
+        public int CurrentWave { get; private set; }
+        public List<Enemy> Enemies { get; private set; }
 
-        public WaveManager()
+        private Player player;
+
+        public WaveManager(Player player)
         {
+            this.player = player;
+
             CurrentWave = 1;
-            rand = new Random();
+            Enemies = new List<Enemy>();
+
+            StartWave();
         }
 
-        public void SpawnWave(List<Enemy> enemies, Player player)
+        public void Update(float deltaTime)
         {
-            enemies.Clear();
-
-            for (int i = 0; i < CurrentWave * 3; i++)
+            foreach (Enemy enemy in Enemies)
             {
-                enemies.Add(createstandardEnemy());
+                if (enemy.IsActive)
+                    enemy.Update(deltaTime);
             }
 
+            Enemies.RemoveAll(e => !e.IsActive);
+
+            if (Enemies.Count == 0)
+            {
+                CurrentWave++;
+
+                OnWaveCompleted();
+
+                StartWave();
+            }
+        }
+
+        private void StartWave()
+        {
+            Enemies.Clear();
+
+            SpawnStandardEnemies(CurrentWave * 3);
 
             if (CurrentWave >= 3)
-            {
-                int scoutCount = CurrentWave - 2;
-                for (int i = 0; i < scoutCount; i++)
-                {
-                    enemies.Add(createScoutEnemy());
-                }
-            }
+                SpawnScoutEnemies(CurrentWave - 2);
 
             if (CurrentWave >= 5)
-            {
-                int shooterCount = CurrentWave - 4;
-                for (int i = 0; i < shooterCount; i++)
-                {
-                    enemies.Add(createShooterEnemy());
-                }
-            }
+                SpawnShooterEnemies(CurrentWave - 4);
 
             if (CurrentWave >= 8)
-            {
-                int tankCount = CurrentWave - 7;
-                for (int i = 0; i < tankCount; i++)
-                {
-                    enemies.Add(createHeavyTankEnemy());
-                }
-            }
+                SpawnHeavyEnemies(CurrentWave - 7);
 
             if (CurrentWave >= 10)
+                SpawnTerroristEnemies(CurrentWave - 9);
+        }
+
+        //--------------------------------------------------
+
+        private void SpawnStandardEnemies(int count)
+        {
+            for (int i = 0; i < count; i++)
             {
-                int terroristCount = CurrentWave - 9;
-                for (int i = 0; i < terroristCount; i++)
-                {
-                    enemies.Add(createTerroristEnemy(player));
-                }
+                var enemy = new StandardEnemy(RandomX(), RandomY());
+
+                enemy.Hp += CurrentWave * 2;
+                enemy.Speed *= (1f + CurrentWave * 0.1f);
+
+                Enemies.Add(enemy);
             }
         }
 
-        private void ApplyDifficulty(Enemy e, int width, int height)
+        private void SpawnScoutEnemies(int count)
         {
+            for (int i = 0; i < count; i++)
+            {
+                var enemy = new ScoutEnemy(RandomX(), RandomY());
 
-            e.Speed = e.Speed * (1 + 0.1f * CurrentWave);
-            e.Hp = e.Hp + (2 * CurrentWave);
-            int randomX = rand.Next(0, 800 - width);
-            int randomY = rand.Next(-150, 0);
-            e.Bounds = new Rectangle(randomX, randomY, width, height);
+                enemy.Hp += CurrentWave * 2;
+                enemy.Speed *= (1f + CurrentWave * 0.1f);
+
+                Enemies.Add(enemy);
+            }
         }
 
-        private StandardEnemy createstandardEnemy()
+        private void SpawnShooterEnemies(int count)
         {
-            StandardEnemy e = new StandardEnemy();
-            ApplyDifficulty(e, 40, 40); 
-            return e;
+            for (int i = 0; i < count; i++)
+            {
+                var enemy = new ShooterEnemy(RandomX(), RandomY());
+
+                enemy.Hp += CurrentWave * 2;
+                enemy.Speed *= (1f + CurrentWave * 0.1f);
+
+                Enemies.Add(enemy);
+            }
         }
 
-        private ScoutEnemy createScoutEnemy()
+        private void SpawnHeavyEnemies(int count)
         {
-            ScoutEnemy e = new ScoutEnemy();
-            ApplyDifficulty(e, 45, 45);
-            return e;
+            for (int i = 0; i < count; i++)
+            {
+                var enemy = new HeavyTankEnemy(RandomX(), RandomY());
+
+                enemy.Hp += CurrentWave * 2;
+                enemy.Speed *= (1f + CurrentWave * 0.1f);
+
+                Enemies.Add(enemy);
+            }
         }
 
-        private ShooterEnemy createShooterEnemy()
+        private void SpawnTerroristEnemies(int count)
         {
-            ShooterEnemy e = new ShooterEnemy();
-            ApplyDifficulty(e, 50, 50);
-            return e;
+            for (int i = 0; i < count; i++)
+            {
+                var enemy = new TerroristEnemy(player, RandomX(), RandomY());
+
+                enemy.Hp += CurrentWave * 2;
+                enemy.Speed *= (1f + CurrentWave * 0.1f);
+
+                Enemies.Add(enemy);
+            }
         }
 
-        private TerroristEnemy createTerroristEnemy(Player p)
+        //--------------------------------------------------
+
+        private int RandomX()
         {
-            TerroristEnemy e = new TerroristEnemy(p);
-            ApplyDifficulty(e, 45, 45); 
-            return e;
+            return random.Next(40, 760);
         }
 
-        private HeavyTankEnemy createHeavyTankEnemy()
+        private int RandomY()
         {
-            HeavyTankEnemy e = new HeavyTankEnemy();
-            ApplyDifficulty(e, 80, 80); 
-            return e;
+            return random.Next(-300, -40);
+        }
+
+        private void OnWaveCompleted()
+        {
+            // فعلاً خالی
+
+            // بعداً اینجا می‌توان:
+            // Shop
+            // Save
+            // Bonus
+            // Boss Warning
+            // را اضافه کرد.
         }
     }
 }

@@ -6,6 +6,13 @@ public class Bullet : GameEntity
 {
     public int Damage { get; set; }
     public bool IsPlayerBullet {get ;set;}
+    public RectangleF Bounds
+    {
+        get
+        {
+            return new RectangleF(X - 2, Y - 8, 4, 16);
+        }
+    }
 
     public Bullet(float x ,float y , float speedY , bool isPlayerBullet)
     :base ( x ,y , Math.Abs(speedY))

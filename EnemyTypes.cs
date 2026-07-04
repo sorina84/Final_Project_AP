@@ -6,122 +6,114 @@ namespace GameObject
 {
     public class StandardEnemy : Enemy
     {
-        public StandardEnemy()
+        public StandardEnemy(float x, float y)
+            : base(x, y, 150)
         {
             Hp = 20;
-            Speed = 4;
             ScoreValue = 10;
             CoinValue = 1;
         }
 
-        public override void Move()
+        public override void Update(float deltaTime)
         {
-            Bounds = new Rectangle (Bounds.X,Bounds.Y + (int)Speed ,Bounds.Width ,Bounds.Height);
+            Y += Speed * deltaTime;
+        }
+
+        public override void Draw(Graphics g)
+        {
+            g.FillRectangle(Brushes.Red, X, Y, 40, 40);
         }
     }
+
+
+
     public class ScoutEnemy : Enemy
     {
         private float angle;
-        //private int initialX;
-        public ScoutEnemy()
+        public ScoutEnemy(float x, float y)
+            : base(x, y, 220)
         {
             Hp = 15;
-            Speed = 6;
             ScoreValue = 20;
             CoinValue = 2;
         }
-
-        public override void Move()
+        public override void Update(float deltaTime)
         {
-            angle += 0.1f;
-
-            int xOffset = (int)(Math.Sin(angle) * 30);
-
-            Bounds = new Rectangle(Bounds.X + xOffset,Bounds.Y + (int)Speed,Bounds.Width,Bounds.Height);
+            angle += 3f * deltaTime;
+            X += (float)System.Math.Sin(angle) * 80 * deltaTime;
+            Y += Speed * deltaTime;
+        }
+        public override void Draw(Graphics g)
+        {
+            g.FillEllipse(Brushes.Blue, X, Y, 35, 35);
         }
     }
-
-
-
 
     public class ShooterEnemy : Enemy
     {
-        public ShooterEnemy()
+        public ShooterEnemy(float x, float y)
+            : base(x, y, 100)
         {
             Hp = 40;
-            Speed = 2;
             ScoreValue = 40;
             CoinValue = 3;
         }
-
-        public override void Move()
+        public override void Update(float deltaTime)
         {
-            Bounds = new Rectangle(Bounds.X,Bounds.Y + (int)Speed,Bounds.Width,Bounds.Height);
+            Y += Speed * deltaTime;
         }
-
+        public override void Draw(Graphics g)
+        {
+            g.FillRectangle(Brushes.Green, X, Y, 45, 45);
+        }
         public override void Attack()
         {
-            // ساخت گلوله دشمن
+            // بعداً گلوله دشمن اینجا ساخته می‌شود.
         }
     }
+
+
     public class HeavyTankEnemy : Enemy
     {
-        public HeavyTankEnemy()
+        public HeavyTankEnemy(float x, float y)
+            : base(x, y, 60)
         {
             Hp = 150;
-            Speed = 1;
             ScoreValue = 100;
             CoinValue = 10;
         }
-
-        public override void Move()
+        public override void Update(float deltaTime)
         {
-            Bounds = new Rectangle(Bounds.X,Bounds.Y + (int)Speed,Bounds.Width,Bounds.Height);
+            Y += Speed * deltaTime;
         }
-
+        public override void Draw(Graphics g)
+        {
+            g.FillRectangle(Brushes.DarkGray, X, Y, 55, 55);
+        }
         public override void Attack()
         {
-            // 8 جهت
         }
     }
+
     public class TerroristEnemy : Enemy
     {
-        private Player target;
-
-        public TerroristEnemy(Player player)
+        public TerroristEnemy(float x, float y)
+            : base(x, y, 170)
         {
-            target = player;
-
             Hp = 80;
-            Speed = 3;
-
             ScoreValue = 70;
             CoinValue = 5;
         }
 
-        public override void Move()
+        public override void Update(float deltaTime)
         {
-            if (target.Bounds.X < Bounds.X)
-                Bounds = new Rectangle(Bounds.X - (int)Speed,Bounds.Y + (int)Speed,Bounds.Width,Bounds.Height);
+            Y += Speed * deltaTime;
 
-            else
-                Bounds = new Rectangle(Bounds.X + (int)Speed,Bounds.Y + (int)Speed,Bounds.Width,Bounds.Height);
         }
 
-            // ۱. ابتدا ابعاد فعلی رو حفظ می‌کنیم تا غیب نشن (اگر توی حلقه اصلی مقداردهی می‌شن)
-            //int currentWidth = Bounds.Width == 0 ? 45 : Bounds.Width;
-            //int currentHeight = Bounds.Height == 0 ? 45 : Bounds.Height;
-            //int newX = Bounds.X;
-            //int newY = Bounds.Y + (int)Speed;
-            //int deltaX = target.Bounds.X - Bounds.X;
-            //if (Math.Abs(deltaX) > (int)Speed)
-            //{
-            //    if (target.Bounds.X < Bounds.X)
-              //      newX -= (int)Speed; // حرکت به چپ
-                //else
-                  //  newX += (int)Speed; // حرکت به راست
-            //}
-            //Bounds = new Rectangle(newX, newY, currentWidth, currentHeight);
-        
+        public override void Draw(Graphics g)
+        {
+            g.FillEllipse(Brushes.Purple, X, Y, 45, 45);
+        }
     }
 }

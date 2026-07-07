@@ -37,7 +37,7 @@ public class Bullet : GameEntity
         if(!IsActive)
             return;
 
-        Brush color = isPlayerBullet ? Brushes.Yellow : Brushes.OrangeRed;
+        Brush color = IsPlayerBullet ? Brushes.Yellow : Brushes.OrangeRed;
         g.FillRectangle ( color , X-2 , Y-8 , 4 ,16);
     }
 }

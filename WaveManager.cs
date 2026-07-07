@@ -120,7 +120,7 @@ namespace GameObject
         {
             for (int i = 0; i < count; i++)
             {
-                var enemy = new TerroristEnemy(player, RandomX(), RandomY());
+                var enemy = new TerroristEnemy(RandomX(), RandomY());
 
                 enemy.Hp += CurrentWave * 2;
                 enemy.Speed *= (1f + CurrentWave * 0.1f);

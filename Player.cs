@@ -6,8 +6,8 @@ public class Player : GameEntity
 {
     public Image Sprite { get; private set; }//*
 
-    public int Width => Sprite?.Width ?? 50;
-    public int Height => Sprite?.Height ?? 50;
+    public const int Width = 64;
+    public const int Height = 64;
 
     public int Lives { get; set; }
     public int FireRate { get; set; }
@@ -125,7 +125,7 @@ public class Player : GameEntity
             case PowerUpType.FireRateBoost:
                 {
                     IsFireRateBoost = true;
-                    _fireRateBoostTimer = 10f;
+                    _fireARateBoostTimer = 10f;
                     ShootCooldown = 0.1f;
                     break;
                 }
@@ -140,8 +140,8 @@ public class Player : GameEntity
         VelocityX *= Friction;
         VelocityY *= Friction;
 
-        VelocityX = Math.Clamp(VelocityX, -MaxSpeed, MaxSpeed); //*
-        VelocityY = Math.Clamp(VelocityY, -MaxSpeed, MaxSpeed);
+        VelocityX = Math.Max(-MaxSpeed, Math.Min(VelocityX, MaxSpeed));
+        VelocityY = Math.Max(-MaxSpeed, Math.Min(VelocityY, MaxSpeed));
 
         X += VelocityX;
         Y += VelocityY;

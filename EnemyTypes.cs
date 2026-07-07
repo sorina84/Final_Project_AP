@@ -12,16 +12,24 @@ namespace GameObject
             Hp = 20;
             ScoreValue = 10;
             CoinValue = 1;
+
+
+            Width = 50;
+            Height = 50;
+            try
+            {
+                Sprite = Image.FromFile("Assets/enemy_standard.png");
+
+            }
+            catch
+            {
+                Sprite = null;
+            }
         }
 
         public override void Update(float deltaTime)
         {
             Y += Speed * deltaTime;
-        }
-
-        public override void Draw(Graphics g)
-        {
-            g.FillRectangle(Brushes.Red, X, Y, 40, 40);
         }
     }
 
@@ -36,16 +44,25 @@ namespace GameObject
             Hp = 15;
             ScoreValue = 20;
             CoinValue = 2;
+
+            Width = 45;
+            Height = 45;
+
+            try
+            {
+                Sprite = Image.FromFile("Assets/enemy_scout.png");
+
+            }
+            catch
+            {
+                Sprite = null;
+            }
         }
         public override void Update(float deltaTime)
         {
             angle += 3f * deltaTime;
             X += (float)System.Math.Sin(angle) * 80 * deltaTime;
             Y += Speed * deltaTime;
-        }
-        public override void Draw(Graphics g)
-        {
-            g.FillEllipse(Brushes.Blue, X, Y, 35, 35);
         }
     }
 
@@ -57,17 +74,25 @@ namespace GameObject
             Hp = 40;
             ScoreValue = 40;
             CoinValue = 3;
+
+            Width = 55;
+            Height = 55;
+            try
+            {
+                Sprite = Image.FromFile("Assets/enemy_shooter.png");
+            }
+            catch
+            {
+                Sprite = null;
+            }
         }
         public override void Update(float deltaTime)
         {
             Y += Speed * deltaTime;
         }
-        public override void Draw(Graphics g)
+        public override List<Bullet> Attack()
         {
-            g.FillRectangle(Brushes.Green, X, Y, 45, 45);
-        }
-        public override void Attack()
-        {
+            return null;
             // بعداً گلوله دشمن اینجا ساخته می‌شود.
         }
     }
@@ -81,17 +106,27 @@ namespace GameObject
             Hp = 150;
             ScoreValue = 100;
             CoinValue = 10;
+
+            Width = 80;
+            Height = 80;
+
+            try
+            {
+                Sprite = Image.FromFile("Assets/enemy_heavy.png");
+
+            }
+            catch
+            {
+                Sprite = null;
+            }
         }
         public override void Update(float deltaTime)
         {
             Y += Speed * deltaTime;
         }
-        public override void Draw(Graphics g)
+        public override List<Bullet> Attack()
         {
-            g.FillRectangle(Brushes.DarkGray, X, Y, 55, 55);
-        }
-        public override void Attack()
-        {
+            return null;
         }
     }
 
@@ -103,17 +138,24 @@ namespace GameObject
             Hp = 80;
             ScoreValue = 70;
             CoinValue = 5;
+
+            Width = 60;
+            Height = 60;
+            try
+            {
+                Sprite = Image.FromFile("Assets/enemy_terrorist.png");
+
+            }
+            catch
+            {
+                Sprite = null;
+            }
         }
 
         public override void Update(float deltaTime)
         {
             Y += Speed * deltaTime;
 
-        }
-
-        public override void Draw(Graphics g)
-        {
-            g.FillEllipse(Brushes.Purple, X, Y, 45, 45);
         }
     }
 }

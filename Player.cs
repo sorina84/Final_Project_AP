@@ -64,13 +64,13 @@ public class Player : GameEntity
 
         if (IsTripleShot)
         {
-            bullets.Add(new Bullet(X, Y - 25, 10f, true)); //*
-            bullets.Add(new Bullet(X - 12, Y - 20, 10f, true));
-            bullets.Add(new Bullet(X + 12, Y - 20, 10f, true));
+            bullets.Add(new Bullet(X, Y - 25, 0, -500, true, BulletType.Player));
+            bullets.Add(new Bullet(X - 12, Y - 20, 0, -500, true, BulletType.Player));
+            bullets.Add(new Bullet(X + 12, Y - 20, 0, -500, true, BulletType.Player));
         }
         else
         {
-            bullets.Add(new Bullet(X, Y - 25, 10f, true));
+            bullets.Add(new Bullet(X, Y - 25, 0, -500f, true, BulletType.Player));
         }
 
         return bullets;

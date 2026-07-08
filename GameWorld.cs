@@ -6,40 +6,63 @@ namespace GameEntity
 {
     public class GameWorld
     {
-        //Entitrs -->
         public Player Player { get; private set; }
         public WaveManager WaveManager { get; private set; }
+
         public List<Bullet> PlayerBullets { get; private set; }
         public List<Bullet> EnemyBullets { get; private set; }
         public List<PowerUp> PowerUps { get; private set; }
 
-        //Timers -->
-        private float _powerUpSpawnTimer = 0f;
-        private const float PowerUpSpawnInterval = 10f;
-        private Random _random = new Random();
-
-        // Game Status
         public bool IsGameOver { get; private set; }
+        public bool IsWin { get; private set; }
         public bool IsPaused { get; set; }
 
-        //screen
         public int ScreenWidth { get; }
         public int ScreenHeight { get; }
 
+        private bool _leftPressed;
+        private bool _rightPressed;
+        private bool _upPressed;
+        private bool _downPressed;
+        private bool _shootPressed;
+
+        private float _powerUpSpawnTimer;
+        private const float PowerUpSpawnInterval = 10f;
+
+        private readonly Random _random = new Random();
 
         public GameWorld(int width, int height)
         {
             ScreenWidth = width;
             ScreenHeight = height;
 
-            Player = new Player(width / 2f, height - 100);
+            Player = new Player(width / 2f, height - 100f);
+            Player.ScreenWidth = width;
+            Player.ScreenHeight = height;
+
             WaveManager = new WaveManager(Player);
+
             PlayerBullets = new List<Bullet>();
             EnemyBullets = new List<Bullet>();
             PowerUps = new List<PowerUp>();
 
             IsGameOver = false;
+            IsWin = false;
             IsPaused = false;
+
+            _powerUpSpawnTimer = 0f;
+
+            ScoreManager.Reset();
+            CoinManager.Reset();
+        }
+
+        public void SetInput(bool left, bool right, bool up, bool down, bool shoot)
+        {
+            _leftPressed = left;
+            _rightPressed = right;
+            _upPressed = up;
+            _downPressed = down;
+            _shootPressed = shoot;
         }
 
         public void Update(float deltaTime)
@@ -47,85 +70,102 @@ namespace GameEntity
             if (IsGameOver || IsPaused)
                 return;
 
+            UpdatePlayerInput(deltaTime);
+
             Player.Update(deltaTime);
 
-            if (Player.CanShoot())
+            if (_shootPressed && Player.CanShoot())
             {
                 var newBullets = Player.Shoot();
                 PlayerBullets.AddRange(newBullets);
             }
 
-            WaveManager.Update(deltaTime);
+            WaveManager.Update(deltaTime, ScreenHeight);
 
-            foreach (var bullet in PlayerBullets)
-                bullet.Update(deltaTime);
-            PlayerBullets.RemoveAll(b => !b.IsActive);
-
-            foreach (var enemy in WaveManager.Enemies)
+            if (WaveManager.IsFinished)
             {
-                var bullets = enemy.Attack();
-                if (bullets != null)
-                    EnemyBullets.AddRange(bullets);
+                IsWin = true;
+                IsGameOver = true;
             }
 
-            foreach (var bullet in EnemyBullets)
+            UpdatePlayerBullets(deltaTime);
+            UpdateEnemyAttacks();
+            UpdateEnemyBullets(deltaTime);
+            UpdatePowerUps(deltaTime);
+            SpawnPowerUpsByTimer(deltaTime);
+
+            CollisionManager.CheckCollisions(
+                Player,
+                WaveManager.Enemies,
+                PlayerBullets,
+                EnemyBullets,
+                PowerUps
+            );
+
+            CleanupInactiveObjects();
+
+            if (Player.Lives <= 0 || !Player.IsActive)
+            {
+                IsGameOver = true;
+                IsWin = false;
+            }
+        }
+
+        private void UpdatePlayerInput(float deltaTime)
+        {
+            if (_leftPressed)
+                Player.AccelerateLeft(deltaTime);
+
+            if (_rightPressed)
+                Player.AccelerateRight(deltaTime);
+
+            if (_upPressed)
+                Player.AccelerateUp(deltaTime);
+
+            if (_downPressed)
+                Player.AccelerateDown(deltaTime);
+        }
+
+        private void UpdatePlayerBullets(float deltaTime)
+        {
+            foreach (Bullet bullet in PlayerBullets)
                 bullet.Update(deltaTime);
-            EnemyBullets.RemoveAll(b => !b.IsActive);
+        }
 
-            foreach (var p in PowerUps)
-                p.Update(deltaTime);
-            PowerUps.RemoveAll(p => !p.IsActive);
+        private void UpdateEnemyAttacks()
+        {
+            foreach (Enemy enemy in WaveManager.Enemies)
+            {
+                if (!enemy.IsActive)
+                    continue;
 
+                var bullets = enemy.Attack();
+
+                if (bullets != null && bullets.Count > 0)
+                    EnemyBullets.AddRange(bullets);
+            }
+        }
+
+        private void UpdateEnemyBullets(float deltaTime)
+        {
+            foreach (Bullet bullet in EnemyBullets)
+                bullet.Update(deltaTime);
+        }
+
+        private void UpdatePowerUps(float deltaTime)
+        {
+            foreach (PowerUp powerUp in PowerUps)
+                powerUp.Update(deltaTime);
+        }
+
+        private void SpawnPowerUpsByTimer(float deltaTime)
+        {
             _powerUpSpawnTimer += deltaTime;
+
             if (_powerUpSpawnTimer >= PowerUpSpawnInterval)
             {
                 _powerUpSpawnTimer = 0f;
                 SpawnRandomPowerUp();
-            }
-
-            CheckCollisions();
-
-            if (Player.Lives <= 0 || !Player.IsActive)
-                IsGameOver = true;
-        }
-
-        private void CheckCollisions()
-        {
-            CollisionManager.CheckCollisions(Player, WaveManager.Enemies, PlayerBullets);
-
-            foreach (var bullet in EnemyBullets)
-            {
-                if (!bullet.IsActive || bullet.IsPlayerBullet)
-                    continue;
-
-                if (bullet.Bounds.IntersectsWith(Player.Bounds))
-                {
-                    bullet.IsActive = false;
-                    if (!Player.IsShield)
-                    {
-                        Player.Hp -= bullet.Damage;
-                        if (Player.Hp <= 0)
-                        {
-                            Player.Lives--;
-                            if (Player.Lives > 0)
-                                Player.Reset();
-                            else
-                                Player.IsActive = false;
-                        }
-                    }
-                }
-            }
-
-            foreach (var powerUp in PowerUps)
-            {
-                if (!powerUp.IsActive)
-                    continue;
-
-                if (powerUp.GetBounds().IntersectsWith(Player.Bounds))
-                {
-                    Player.ActivatePowerUp(powerUp.Type);
-                    powerUp.IsActive = false;
-                }
             }
         }
 
@@ -140,30 +180,44 @@ namespace GameEntity
             PowerUps.Add(new PowerUp(x, y, randomType));
         }
 
-        public void MovePlayerLeft() => Player.MoveLeft();
-        public void MovePlayerRight() => Player.MoveRight();
-        public void MovePlayerUp() => Player.MoveUp();
-        public void MovePlayerDown() => Player.MoveDown();
+        private void CleanupInactiveObjects()
+        {
+            PlayerBullets.RemoveAll(b => !b.IsActive);
+            EnemyBullets.RemoveAll(b => !b.IsActive);
+            PowerUps.RemoveAll(p => !p.IsActive);
+            WaveManager.Enemies.RemoveAll(e => !e.IsActive);
+        }
 
         public void Render(Graphics g)
         {
             g.Clear(Color.Black);
 
-            foreach (var p in PowerUps)
-                p.Draw(g);
+            foreach (PowerUp powerUp in PowerUps)
+                powerUp.Draw(g);
 
-            foreach (var b in EnemyBullets)
-                b.Draw(g);
+            foreach (Bullet bullet in EnemyBullets)
+                bullet.Draw(g);
 
-            foreach (var b in PlayerBullets)
-                b.Draw(g);
+            foreach (Bullet bullet in PlayerBullets)
+                bullet.Draw(g);
 
-            foreach (var e in WaveManager.Enemies)
-                e.Draw(g);
+            foreach (Enemy enemy in WaveManager.Enemies)
+                enemy.Draw(g);
 
             Player.Draw(g);
 
             DrawHUD(g);
+
+            if (IsPaused)
+                DrawCenteredMessage(g, "PAUSED");
+
+            if (IsGameOver)
+            {
+                if (IsWin)
+                    DrawCenteredMessage(g, "YOU WIN!");
+                else
+                    DrawCenteredMessage(g, "GAME OVER");
+            }
         }
 
         private void DrawHUD(Graphics g)
@@ -171,10 +225,42 @@ namespace GameEntity
             using (var font = new Font("Arial", 14))
             {
                 g.DrawString($"Wave: {WaveManager.CurrentWave}", font, Brushes.White, 10, 10);
-                g.DrawString($"HP: {Player.Hp}", font, Brushes.White, 10, 30);
-                g.DrawString($"Lives: {Player.Lives}", font, Brushes.White, 10, 50);
-                g.DrawString($"Score: {ScoreManager.Score}", font, Brushes.White, 10, 70);
-                g.DrawString($"Coins: {CoinManager.Coins}", font, Brushes.White, 10, 90);
+                g.DrawString($"HP: {Player.Hp}", font, Brushes.White, 10, 35);
+                g.DrawString($"Lives: {Player.Lives}", font, Brushes.White, 10, 60);
+                g.DrawString($"Score: {ScoreManager.Score}", font, Brushes.White, 10, 85);
+                g.DrawString($"Coins: {CoinManager.Coins}", font, Brushes.White, 10, 110);
+
+                int y = 140;
+
+                if (Player.IsShield)
+                {
+                    g.DrawString($"Shield: {Player.ShieldTimeLeft:0.0}s", font, Brushes.Cyan, 10, y);
+                    y += 25;
+                }
+
+                if (Player.IsTripleShot)
+                {
+                    g.DrawString($"Triple Shot: {Player.TripleShotTimeLeft:0.0}s", font, Brushes.Orange, 10, y);
+                    y += 25;
+                }
+
+                if (Player.IsFireRateBoost)
+                {
+                    g.DrawString($"Fire Boost: {Player.FireRateBoostTimeLeft:0.0}s", font, Brushes.Gold, 10, y);
+                }
+            }
+        }
+
+        private void DrawCenteredMessage(Graphics g, string message)
+        {
+            using (var font = new Font("Arial", 32, FontStyle.Bold))
+            {
+                SizeF size = g.MeasureString(message, font);
+
+                float x = (ScreenWidth - size.Width) / 2f;
+                float y = (ScreenHeight - size.Height) / 2f;
+
+                g.DrawString(message, font, Brushes.White, x, y);
             }
         }
     }

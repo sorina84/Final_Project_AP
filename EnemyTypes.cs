@@ -68,8 +68,10 @@ namespace GameObject
 
     public class ShooterEnemy : Enemy
     {
+        private float shootTimer;
+        private const float ShootDelay = 1.5f;
         public ShooterEnemy(float x, float y)
-            : base(x, y, 100)
+            : base(x, y, 80)
         {
             Hp = 40;
             ScoreValue = 40;
@@ -89,19 +91,29 @@ namespace GameObject
         public override void Update(float deltaTime)
         {
             Y += Speed * deltaTime;
+            shootTimer += deltaTime;
         }
+
         public override List<Bullet> Attack()
         {
-            return null;
-            // بعداً گلوله دشمن اینجا ساخته می‌شود.
+            shootTimer++;
+            if (shootTimer < 60)
+                return null;
+            shootTimer = 0;
+            return new List<Bullet>()
+            {
+                new Bullet(X + Width/2,Y + Height,0,250,false , BulletType.Shooter)
+            };
         }
     }
 
 
     public class HeavyTankEnemy : Enemy
     {
+        private float shootTimer = 0f;
+        private const float ShootInterval = 1f;
         public HeavyTankEnemy(float x, float y)
-            : base(x, y, 60)
+            : base(x, y, 40)
         {
             Hp = 150;
             ScoreValue = 100;
@@ -123,10 +135,30 @@ namespace GameObject
         public override void Update(float deltaTime)
         {
             Y += Speed * deltaTime;
+            shootTimer += deltaTime;
         }
         public override List<Bullet> Attack()
         {
-            return null;
+
+            if (shootTimer < ShootInterval)
+                return null;
+            shootTimer = 0;
+            float s = 250;
+            float d = s / (float)Math.Sqrt(2);
+
+
+            return new List<Bullet>()
+            {
+                new Bullet(X+Width/2,Y+Height/2,0,s,false , BulletType.Heavy),
+                new Bullet(X+Width/2,Y+Height/2,s,0,false, BulletType.Heavy),
+                new Bullet(X+Width/2,Y+Height/2,-s,0,false, BulletType.Heavy),
+                new Bullet(X+Width/2,Y+Height/2,0,-s,false, BulletType.Heavy),
+
+                new Bullet(X+Width/2,Y+Height/2,d,d,false, BulletType.Heavy),
+                new Bullet(X+Width/2,Y+Height/2,-d,d,false, BulletType.Heavy),
+                new Bullet(X+Width/2,Y+Height/2,d,-d,false, BulletType.Heavy),
+                new Bullet(X+Width/2,Y+Height/2,-d,-d,false, BulletType.Heavy)
+            };
         }
     }
 

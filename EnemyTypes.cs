@@ -9,6 +9,7 @@ namespace GameEntity
         public StandardEnemy(float x, float y)
             : base(x, y, 150f)
         {
+            Sprite = AssetLoader.LoadImage("enemy_standard.png");
             Hp = 20;
             MaxHp = Hp;
             ScoreValue = 10;
@@ -25,21 +26,20 @@ namespace GameEntity
 
         public override void Draw(Graphics g)
         {
-            if (!IsActive)
-                return;
-
-            g.FillRectangle(Brushes.Red, X - Width / 2f, Y - Height / 2f, Width, Height);
+            DrawSpriteOrFallback(g, Brushes.Red);
         }
     }
 
     public class ScoutEnemy : Enemy
     {
         private float _angle;
-        private readonly float _startX;
+        private float _startX;
 
         public ScoutEnemy(float x, float y)
             : base(x, y, 220f)
         {
+            Sprite = AssetLoader.LoadImage("enemy_scout.png");
+
             _startX = x;
             _angle = 0f;
 
@@ -61,10 +61,14 @@ namespace GameEntity
 
         public override void Draw(Graphics g)
         {
-            if (!IsActive)
-                return;
+            DrawSpriteOrFallback(g, Brushes.DeepSkyBlue, true);
+        }
 
-            g.FillEllipse(Brushes.DeepSkyBlue, X - Width / 2f, Y - Height / 2f, Width, Height);
+        public override void ResetPosition(float x, float y)
+        {
+            base.ResetPosition(x, y);
+            _startX = x;
+            _angle = 0f;
         }
     }
 
@@ -73,12 +77,14 @@ namespace GameEntity
         private float _shootTimer;
         private const float ShootInterval = 1.5f;
 
-        public override int Width => 45;
-        public override int Height => 45;
+        public override int Width => 60;
+        public override int Height => 60;
 
         public ShooterEnemy(float x, float y)
             : base(x, y, 100f)
         {
+            Sprite = AssetLoader.LoadImage("enemy_shooter.png");
+
             Hp = 40;
             MaxHp = Hp;
             ScoreValue = 40;
@@ -110,11 +116,8 @@ namespace GameEntity
 
         public override void Draw(Graphics g)
         {
-            if (!IsActive)
-                return;
-
-            g.FillRectangle(Brushes.Green, X - Width / 2f, Y - Height / 2f, Width, Height);
-        }
+            DrawSpriteOrFallback(g, Brushes.Green);
+        }  
     }
 
     public class HeavyTankEnemy : Enemy
@@ -128,6 +131,8 @@ namespace GameEntity
         public HeavyTankEnemy(float x, float y)
             : base(x, y, 60f)
         {
+            Sprite = AssetLoader.LoadImage("enemy_heavy.png");
+
             Hp = 150;
             MaxHp = Hp;
             ScoreValue = 100;
@@ -173,10 +178,7 @@ namespace GameEntity
 
         public override void Draw(Graphics g)
         {
-            if (!IsActive)
-                return;
-
-            g.FillRectangle(Brushes.DarkGray, X - Width / 2f, Y - Height / 2f, Width, Height);
+            DrawSpriteOrFallback(g, Brushes.DarkGray);
             DrawHealthBar(g);
         }
 
@@ -211,12 +213,13 @@ namespace GameEntity
     {
         private readonly Player _targetPlayer;
 
-        public override int Width => 45;
-        public override int Height => 45;
+        public override int Width => 60;
+        public override int Height => 60;
 
         public TerroristEnemy(Player targetPlayer, float x, float y)
             : base(x, y, 170f)
         {
+            Sprite = AssetLoader.LoadImage("enemy_terrorist.png");
             _targetPlayer = targetPlayer;
 
             Hp = 80;
@@ -253,11 +256,7 @@ namespace GameEntity
 
         public override void Draw(Graphics g)
         {
-            if (!IsActive)
-                return;
-
-            g.FillEllipse(Brushes.Purple, X - Width / 2f, Y - Height / 2f, Width, Height);
-            g.DrawEllipse(Pens.Magenta, X - Width / 2f, Y - Height / 2f, Width, Height);
+            DrawSpriteOrFallback(g, Brushes.Purple, true);
         }
     }
 }

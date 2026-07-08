@@ -12,6 +12,7 @@ namespace GameEntity
         public List<Bullet> PlayerBullets { get; private set; }
         public List<Bullet> EnemyBullets { get; private set; }
         public List<PowerUp> PowerUps { get; private set; }
+        public List<Coin> Coins { get; private set; }
 
         public bool IsGameOver { get; private set; }
         public bool IsWin { get; private set; }
@@ -39,12 +40,14 @@ namespace GameEntity
             Player = new Player(width / 2f, height - 100f);
             Player.ScreenWidth = width;
             Player.ScreenHeight = height;
+            Player.Reset();
 
             WaveManager = new WaveManager(Player);
 
             PlayerBullets = new List<Bullet>();
             EnemyBullets = new List<Bullet>();
             PowerUps = new List<PowerUp>();
+            Coins = new List<Coin>();
 
             IsGameOver = false;
             IsWin = false;
@@ -99,7 +102,9 @@ namespace GameEntity
                 WaveManager.Enemies,
                 PlayerBullets,
                 EnemyBullets,
-                PowerUps
+                PowerUps,
+                Coins,
+                WaveManager.CurrentWave
             );
 
             CleanupInactiveObjects();
@@ -158,6 +163,12 @@ namespace GameEntity
                 powerUp.Update(deltaTime);
         }
 
+        private void UpdateCoins(float deltaTime)
+        {
+            foreach (Coin coin in Coins)
+                coin.Update(deltaTime);
+        }
+
         private void SpawnPowerUpsByTimer(float deltaTime)
         {
             _powerUpSpawnTimer += deltaTime;
@@ -186,6 +197,7 @@ namespace GameEntity
             EnemyBullets.RemoveAll(b => !b.IsActive);
             PowerUps.RemoveAll(p => !p.IsActive);
             WaveManager.Enemies.RemoveAll(e => !e.IsActive);
+            Coins.RemoveAll(c => !c.IsActive);
         }
 
         public void Render(Graphics g)
@@ -194,6 +206,9 @@ namespace GameEntity
 
             foreach (PowerUp powerUp in PowerUps)
                 powerUp.Draw(g);
+            
+            foreach (Coin coin in Coins)
+                coin.Draw(g);
 
             foreach (Bullet bullet in EnemyBullets)
                 bullet.Draw(g);

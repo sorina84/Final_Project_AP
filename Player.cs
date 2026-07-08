@@ -8,8 +8,8 @@ namespace GameEntity
     {
         public Image Sprite { get; private set; }
 
-        public int Width => Sprite?.Width ?? 50;
-        public int Height => Sprite?.Height ?? 50;
+        public int Width => 60;
+        public int Height => 60;
 
         public int Lives { get; set; }
         public int Hp { get; set; }
@@ -65,7 +65,7 @@ namespace GameEntity
         {
             try
             {
-                Sprite = Image.FromFile("Assets/player_ship.png");
+                Sprite = AssetLoader.LoadImage("player.png");
             }
             catch
             {
@@ -274,6 +274,7 @@ namespace GameEntity
         public void Reset()
         {
             Hp = 100;
+            Lives = 3;
 
             X = ScreenWidth / 2f;
             Y = ScreenHeight - 100f;

@@ -36,8 +36,10 @@ namespace GameEntity
                 if (enemy.IsActive)
                     enemy.Update(deltaTime);
 
-                if (enemy.IsOutOfScreen(screenHeight))
-                    enemy.IsActive = false;
+                if (enemy.IsActive && enemy.IsOutOfScreen(screenHeight))
+                {
+                    enemy.ResetPosition(RandomX(), RandomY());
+                }
             }
 
             Enemies.RemoveAll(e => !e.IsActive);
@@ -59,19 +61,19 @@ namespace GameEntity
         {
             Enemies.Clear();
 
-            SpawnStandardEnemies(CurrentWave * 3);
+            SpawnStandardEnemies(2 + (CurrentWave + 1) / 2);
 
             if (CurrentWave >= 3)
-                SpawnScoutEnemies(CurrentWave - 2);
+                SpawnScoutEnemies(1 + (CurrentWave - 3) / 3);
 
             if (CurrentWave >= 5)
-                SpawnShooterEnemies(CurrentWave - 4);
+                SpawnShooterEnemies(1 + (CurrentWave - 5) / 3);
 
             if (CurrentWave >= 8)
-                SpawnHeavyEnemies(CurrentWave - 7);
+                SpawnTerroristEnemies(1);
 
             if (CurrentWave >= 10)
-                SpawnTerroristEnemies(CurrentWave - 9);
+                SpawnHeavyEnemies(1);
         }
 
         private void ApplyDifficulty(Enemy enemy)

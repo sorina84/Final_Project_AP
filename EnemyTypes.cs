@@ -7,7 +7,7 @@ namespace GameObject
     public class StandardEnemy : Enemy
     {
         public StandardEnemy(float x, float y)
-            : base(x, y, 150)
+            : base(x, y, 50)
         {
             Hp = 20;
             ScoreValue = 10;
@@ -39,7 +39,7 @@ namespace GameObject
     {
         private float angle;
         public ScoutEnemy(float x, float y)
-            : base(x, y, 220)
+            : base(x, y, 130)
         {
             Hp = 15;
             ScoreValue = 20;
@@ -165,7 +165,7 @@ namespace GameObject
     public class TerroristEnemy : Enemy
     {
         public TerroristEnemy(float x, float y)
-            : base(x, y, 170)
+            : base(x, y, 150)
         {
             Hp = 80;
             ScoreValue = 70;

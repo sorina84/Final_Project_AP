@@ -63,12 +63,9 @@ namespace GameEntity
 
             foreach (var enemy in WaveManager.Enemies)
             {
-                if (enemy is ShooterEnemy shooter)
-                {
-                    var bullets = shooter.Attack(); //  ShooterEnemy
-                    if (bullets != null)
-                        EnemyBullets.AddRange(bullets);
-                }
+                var bullets = enemy.Attack();
+                if (bullets != null)
+                    EnemyBullets.AddRange(bullets);
             }
 
             foreach (var bullet in EnemyBullets)

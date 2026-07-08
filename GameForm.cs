@@ -8,7 +8,7 @@ namespace SpaceShooter
     public partial class GameForm : Form
     {
         private GameWorld _world;
-        private Timer _gameTimer;
+        private System.Windows.Forms.Timer _gameTimer;
         private DateTime _lastUpdate;
 
         private bool _leftPressed;
@@ -19,16 +19,16 @@ namespace SpaceShooter
 
         public GameForm()
         {
-            InitializeComponent();
-
             DoubleBuffered = true;
             Width = 800;
             Height = 600;
+            Text = "Space Shooter";
+            StartPosition = FormStartPosition.CenterScreen;
             KeyPreview = true;
 
             _world = new GameWorld(ClientSize.Width, ClientSize.Height);
 
-            _gameTimer = new Timer();
+            _gameTimer = new System.Windows.Forms.Timer();
             _gameTimer.Interval = 16;
             _gameTimer.Tick += GameLoop;
 

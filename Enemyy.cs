@@ -43,7 +43,7 @@ namespace GameObject
 
         public virtual void Attack()
         {
-            // بعداً برای دشمن‌های تیرانداز استفاده می‌شود.
+            return new List<Bullet>();
         }
     }
 }

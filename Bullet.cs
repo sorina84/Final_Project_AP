@@ -1,35 +1,47 @@
+﻿using System;
 
-using System;
 using System.Drawing;
 
-public class Bullet : GameEntity
+namespace GameEntity
 {
-    public bool IsPlayerBullet {get ;set;}
-
-    public Bullet(float x ,float y , float speedY , bool isPlayerBullet)
-    :base ( x ,y , Math.Abs(speedY))
+    public class Bullet : GameEntity
     {
-        IsPlayerBullet = isPlayerBullet;
-        Speed = isPlayerBullet ? -Math.Abs(speedY) : Math.Abs(speedY);
-    }
+        public int Damage { get; set; }
+        public bool IsPlayerBullet { get; set; }
+        public RectangleF Bounds
+        {
+            get
+            {
+                return new RectangleF(X - 2,Y - 8,4,16);
+            }
+        }
 
-    public override void Update(float deltaTime)
-    {
-        if(!IsActive)
-            return;
+        public Bullet(float x, float y, float speedY, bool isPlayerBullet)
+        : base(x, y, Math.Abs(speedY))
+        {
+            IsPlayerBullet = isPlayerBullet;
+            Speed = isPlayerBullet ? -Math.Abs(speedY) : Math.Abs(speedY);
+            Damage = isPlayerBullet ? 10 :15;
+        }
 
-        Y += Speed*deltaTime;
+        public override void Update(float deltaTime)
+        {
+            if (!IsActive)
+                return;
 
-        if(Y < -10 || Y > 650 )
-            IsActive = false;
-    }
+            Y += Speed * deltaTime;
 
-    public override void Draw(Graphics g)
-    {
-        if(!IsActive)
-            return;
+            if (Y < -10 || Y > 650)
+                IsActive = false;
+        }
 
-        Brush color = isPlayerBullet ? Brushes.Yellow : Brushes.OrangeRed;
-        g.FillRectangle ( color , X-2 , Y-8 , 4 ,16);
+        public override void Draw(Graphics g)
+        {
+            if (!IsActive)
+                return;
+
+            Brush color = IsPlayerBullet ? Brushes.Yellow : Brushes.OrangeRed;
+            g.FillRectangle(color, X - 2, Y - 8, 4, 16);
+        }
     }
 }

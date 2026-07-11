@@ -2,127 +2,175 @@
 
 namespace GameEntity
 {
-    public enum ShopItem
+    public class ShopItem
     {
-        FalconShip,
-        CyberShip,
-        GreenBullet,
-        PlasmaBullet,
-        GalaxyBackground,
-        MarsBackground,
-        ExtraLife
-    }
+        public string Id { get; private set; }
+        public string Name { get; private set; }
+        public string Category { get; private set; }
+        public string Description { get; private set; }
+        public int Price { get; private set; }
 
-    public class PlayerData
-    {
-        public int Coins { get; set; }
-        public int HighScore { get; set; }
-
-        public string ShipSkin { get; set; }
-        public string BulletSkin { get; set; }
-        public string BackgroundSkin { get; set; }
-
-        public int ExtraLives { get; set; }
-
-        public HashSet<ShopItem> PurchasedItems { get; private set; }
-
-        public PlayerData()
+        public ShopItem(string id, string name, string category, string description, int price)
         {
-            Coins = 0;
-            HighScore = 0;
-
-            ShipSkin = "Default";
-            BulletSkin = "Default";
-            BackgroundSkin = "Default";
-
-            ExtraLives = 0;
-            PurchasedItems = new HashSet<ShopItem>();
+            Id = id;
+            Name = name;
+            Category = category;
+            Description = description;
+            Price = price;
         }
     }
 
-    public class ShopManager
+    public static class ShopManager
     {
-        private readonly Dictionary<ShopItem, int> _prices;
-
-        public ShopManager()
+        private static readonly List<ShopItem> _items = new List<ShopItem>
         {
-            _prices = new Dictionary<ShopItem, int>
+            new ShopItem(
+                "FalconShip",
+                "Falcon Ship",
+                "Ship Skins",
+                "A sharp and fast-looking player ship skin.",
+                40
+            ),
+
+            new ShopItem(
+                "CyberShip",
+                "Cyber Ship",
+                "Ship Skins",
+                "A futuristic neon player ship skin.",
+                75
+            ),
+
+            new ShopItem(
+                "GreenBullet",
+                "Green Bullet",
+                "Bullet Styles",
+                "Changes player bullets to a green energy style.",
+                30
+            ),
+
+            new ShopItem(
+                "PlasmaBullet",
+                "Plasma Bullet",
+                "Bullet Styles",
+                "Changes player bullets to a stronger plasma visual style.",
+                55
+            ),
+
+            new ShopItem(
+                "BlueNebulaBackground",
+                "Blue Nebula",
+                "Background Themes",
+                "A blue galaxy style background for gameplay.",
+                50
+            ),
+
+            new ShopItem(
+                "PinkGalaxyBackground",
+                "Pink Galaxy",
+                "Background Themes",
+                "A pink and purple galaxy background theme.",
+                60
+            ),
+
+            new ShopItem(
+                "ExtraLifeBooster",
+                "Extra Life",
+                "Boosters",
+                "Start the next game with 4 lives instead of 3.",
+                100
+            )
+        };
+
+        private static readonly HashSet<string> _purchasedItems = new HashSet<string>();
+
+        public static IReadOnlyList<ShopItem> Items => _items;
+
+        public static bool IsPurchased(string itemId)
+        {
+            return _purchasedItems.Contains(itemId);
+        }
+
+        public static bool BuyItem(string itemId, out string message)
+        {
+            ShopItem item = FindItem(itemId);
+
+            if (item == null)
             {
-                { ShopItem.FalconShip, 500 },
-                { ShopItem.CyberShip, 800 },
-                { ShopItem.GreenBullet, 300 },
-                { ShopItem.PlasmaBullet, 600 },
-                { ShopItem.GalaxyBackground, 400 },
-                { ShopItem.MarsBackground, 700 },
-                { ShopItem.ExtraLife, 200 }
-            };
-        }
-
-        public int GetPrice(ShopItem item)
-        {
-            return _prices[item];
-        }
-
-        public bool IsPurchased(PlayerData data, ShopItem item)
-        {
-            return data.PurchasedItems.Contains(item);
-        }
-
-        public bool CanBuy(PlayerData data, ShopItem item)
-        {
-            if (item != ShopItem.ExtraLife && IsPurchased(data, item))
+                message = "Item not found.";
                 return false;
+            }
 
-            return data.Coins >= GetPrice(item);
-        }
-
-        public bool BuyItem(PlayerData data, ShopItem item)
-        {
-            if (!CanBuy(data, item))
+            if (IsPurchased(itemId))
+            {
+                message = "You already own this item.";
                 return false;
+            }
 
-            data.Coins -= GetPrice(item);
+            if (!CoinManager.SpendCoins(item.Price))
+            {
+                message = "Not enough coins.";
+                return false;
+            }
 
-            if (item != ShopItem.ExtraLife)
-                data.PurchasedItems.Add(item);
+            _purchasedItems.Add(itemId);
+            EquipItem(itemId);
 
-            EquipItem(data, item);
-
+            message = "Item purchased successfully.";
             return true;
         }
 
-        public void EquipItem(PlayerData data, ShopItem item)
+        public static void EquipItem(string itemId)
         {
-            switch (item)
+            ShopItem item = FindItem(itemId);
+
+            if (item == null)
+                return;
+
+            if (item.Category == "Ship Skins")
             {
-                case ShopItem.FalconShip:
-                    data.ShipSkin = "Falcon";
-                    break;
-
-                case ShopItem.CyberShip:
-                    data.ShipSkin = "Cyber";
-                    break;
-
-                case ShopItem.GreenBullet:
-                    data.BulletSkin = "Green";
-                    break;
-
-                case ShopItem.PlasmaBullet:
-                    data.BulletSkin = "Plasma";
-                    break;
-
-                case ShopItem.GalaxyBackground:
-                    data.BackgroundSkin = "Galaxy";
-                    break;
-
-                case ShopItem.MarsBackground:
-                    data.BackgroundSkin = "Mars";
-                    break;
-
-                case ShopItem.ExtraLife:
-                    data.ExtraLives++;
-                    break;
+                GameSettings.EquippedShipSkin = item.Id;
             }
+            else if (item.Category == "Bullet Styles")
+            {
+                GameSettings.EquippedBulletStyle = item.Id;
+            }
+            else if (item.Category == "Background Themes")
+            {
+                GameSettings.EquippedBackground = item.Id;
+            }
+            else if (item.Category == "Boosters")
+            {
+                if (item.Id == "ExtraLifeBooster")
+                    GameSettings.ExtraLifeBoosterEnabled = true;
+            }
+        }
+
+        public static bool IsEquipped(ShopItem item)
+        {
+            if (item.Category == "Ship Skins")
+                return GameSettings.EquippedShipSkin == item.Id;
+
+            if (item.Category == "Bullet Styles")
+                return GameSettings.EquippedBulletStyle == item.Id;
+
+            if (item.Category == "Background Themes")
+                return GameSettings.EquippedBackground == item.Id;
+
+            if (item.Category == "Boosters")
+                return item.Id == "ExtraLifeBooster" && GameSettings.ExtraLifeBoosterEnabled;
+
+            return false;
+        }
+
+        private static ShopItem FindItem(string itemId)
+        {
+            foreach (ShopItem item in _items)
+            {
+                if (item.Id == itemId)
+                    return item;
+            }
+
+            return null;
         }
     }
 }

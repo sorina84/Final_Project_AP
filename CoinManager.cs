@@ -16,6 +16,26 @@ namespace GameEntity
             Coins += amount;
         }
 
+        public static bool SpendCoins(int amount)
+        {
+            if (amount <= 0)
+                return true;
+
+            if (Coins < amount)
+                return false;
+
+            Coins -= amount;
+            return true;
+        }
+
+        public static void SetCoins(int amount)
+        {
+            if (amount < 0)
+                amount = 0;
+
+            Coins = amount;
+        }
+
         public static void Reset()
         {
             Coins = 0;

@@ -181,21 +181,24 @@ namespace GameEntity
 
         private static void DamagePlayer(Player player, int damage)
         {
+            if (!player.IsActive)
+                return;
+
             player.Hp -= damage;
 
-            if (player.Hp <= 0)
-            {
-                player.Lives--;
+            if (player.Hp > 0)
+                return;
 
-                if (player.Lives > 0)
-                {
-                    player.Reset();
-                }
-                else
-                {
-                    player.Hp = 0;
-                    player.IsActive = false;
-                }
+            player.Lives--;
+
+            if (player.Lives > 0)
+            {
+                player.Reset();
+            }
+            else
+            {
+                player.Hp = 0;
+                player.IsActive = false;
             }
         }
     }

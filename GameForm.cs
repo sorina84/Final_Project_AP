@@ -17,6 +17,9 @@ namespace SpaceShooter
         private bool _downPressed;
         private bool _shootPressed;
 
+        private bool _isClosingAfterGameEnd;
+        private Button _backToMenuButton;
+
         public GameForm()
         {
             DoubleBuffered = true;
@@ -33,11 +36,54 @@ namespace SpaceShooter
             _gameTimer.Tick += GameLoop;
 
             _lastUpdate = DateTime.Now;
+            _isClosingAfterGameEnd = false;
 
             KeyDown += GameForm_KeyDown;
             KeyUp += GameForm_KeyUp;
 
+            CreateBackToMenuButton();
+
             _gameTimer.Start();
+        }
+
+        private void CreateBackToMenuButton()
+        {
+            _backToMenuButton = new Button();
+
+            _backToMenuButton.Text = "BACK TO MENU";
+            _backToMenuButton.Width = 220;
+            _backToMenuButton.Height = 50;
+            _backToMenuButton.Left = (ClientSize.Width - _backToMenuButton.Width) / 2;
+            _backToMenuButton.Top = ClientSize.Height / 2 + 125;
+
+            _backToMenuButton.Font = new Font("Arial", 13, FontStyle.Bold);
+            _backToMenuButton.BackColor = Color.FromArgb(28, 31, 46);
+            _backToMenuButton.ForeColor = Color.White;
+            _backToMenuButton.FlatStyle = FlatStyle.Flat;
+            _backToMenuButton.FlatAppearance.BorderColor = Color.FromArgb(255, 70, 180);
+            _backToMenuButton.FlatAppearance.BorderSize = 2;
+            _backToMenuButton.Cursor = Cursors.Hand;
+            _backToMenuButton.Visible = false;
+
+            _backToMenuButton.MouseEnter += (sender, e) =>
+            {
+                _backToMenuButton.BackColor = Color.FromArgb(55, 58, 80);
+                _backToMenuButton.ForeColor = Color.FromArgb(0, 210, 255);
+            };
+
+            _backToMenuButton.MouseLeave += (sender, e) =>
+            {
+                _backToMenuButton.BackColor = Color.FromArgb(28, 31, 46);
+                _backToMenuButton.ForeColor = Color.White;
+            };
+
+            _backToMenuButton.Click += (sender, e) =>
+            {
+                Close();
+            };
+
+            Controls.Add(_backToMenuButton);
+            _backToMenuButton.BringToFront();
         }
 
         private void GameLoop(object sender, EventArgs e)
@@ -49,11 +95,26 @@ namespace SpaceShooter
             _world.SetInput(_leftPressed, _rightPressed, _upPressed, _downPressed, _shootPressed);
             _world.Update(deltaTime);
 
+            if (_world.IsGameOver && !_isClosingAfterGameEnd)
+            {
+                _isClosingAfterGameEnd = true;
+                _gameTimer.Stop();
+
+                _backToMenuButton.Visible = true;
+                _backToMenuButton.BringToFront();
+
+                Invalidate();
+                return;
+            }
+
             Invalidate();
         }
 
         private void GameForm_KeyDown(object sender, KeyEventArgs e)
         {
+            if (_world.IsGameOver)
+                return;
+
             switch (e.KeyCode)
             {
                 case Keys.Left:
@@ -120,6 +181,20 @@ namespace SpaceShooter
         {
             base.OnPaint(e);
             _world.Render(e.Graphics);
+
+            if (_backToMenuButton != null)
+                _backToMenuButton.BringToFront();
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            if (_gameTimer != null)
+            {
+                _gameTimer.Stop();
+                _gameTimer.Dispose();
+            }
+
+            base.OnFormClosed(e);
         }
     }
 }

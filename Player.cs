@@ -274,7 +274,6 @@ namespace GameEntity
         public void Reset()
         {
             Hp = 100;
-            Lives = 3;
 
             X = ScreenWidth / 2f;
             Y = ScreenHeight - 100f;

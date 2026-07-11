@@ -56,7 +56,7 @@ namespace GameEntity
             _powerUpSpawnTimer = 0f;
 
             ScoreManager.Reset();
-            CoinManager.Reset();
+            //CoinManager.Reset();
         }
 
         public void SetInput(bool left, bool right, bool up, bool down, bool shoot)
@@ -85,12 +85,6 @@ namespace GameEntity
 
             WaveManager.Update(deltaTime, ScreenHeight);
 
-            if (WaveManager.IsFinished)
-            {
-                IsWin = true;
-                IsGameOver = true;
-            }
-
             UpdatePlayerBullets(deltaTime);
             UpdateEnemyAttacks();
             UpdateEnemyBullets(deltaTime);
@@ -113,6 +107,14 @@ namespace GameEntity
             {
                 IsGameOver = true;
                 IsWin = false;
+                return;
+            }
+
+            if (WaveManager.IsFinished)
+            {
+                IsGameOver = true;
+                IsWin = true;
+                return;
             }
         }
 
@@ -233,6 +235,10 @@ namespace GameEntity
                 else
                     DrawCenteredMessage(g, "GAME OVER");
             }
+            if (IsGameOver)
+            {
+                DrawEndGameOverlay(g);
+            }
         }
 
         private void DrawHUD(Graphics g)
@@ -276,6 +282,70 @@ namespace GameEntity
                 float y = (ScreenHeight - size.Height) / 2f;
 
                 g.DrawString(message, font, Brushes.White, x, y);
+            }
+        }
+
+        private void DrawEndGameOverlay(Graphics g)
+        {
+            using (SolidBrush overlayBrush = new SolidBrush(Color.FromArgb(210, 5, 8, 18)))
+            {
+                g.FillRectangle(overlayBrush, 0, 0, ScreenWidth, ScreenHeight);
+            }
+
+            Rectangle panelRect = new Rectangle(
+                ScreenWidth / 2 - 260,
+                ScreenHeight / 2 - 170,
+                520,
+                270
+            );
+
+            Color accentColor = IsWin
+                ? Color.FromArgb(0, 210, 255)
+                : Color.FromArgb(255, 70, 180);
+
+            using (SolidBrush panelBrush = new SolidBrush(Color.FromArgb(230, 25, 28, 45)))
+            using (Pen borderPen = new Pen(accentColor, 3))
+            using (Pen innerPen = new Pen(Color.FromArgb(120, Color.White), 1))
+            {
+                g.FillRectangle(panelBrush, panelRect);
+                g.DrawRectangle(borderPen, panelRect);
+                g.DrawRectangle(innerPen, panelRect.X + 10, panelRect.Y + 10, panelRect.Width - 20, panelRect.Height - 20);
+            }
+
+            string title = IsWin ? "YOU WIN!" : "GAME OVER";
+            string subtitle = IsWin
+                ? "ALL WAVES CLEARED"
+                : "MISSION FAILED";
+
+            using (Font titleFont = new Font("Arial", 40, FontStyle.Bold))
+            using (Font subtitleFont = new Font("Arial", 15, FontStyle.Bold))
+            using (Font statsFont = new Font("Arial", 16, FontStyle.Bold))
+            using (SolidBrush titleBrush = new SolidBrush(accentColor))
+            using (SolidBrush whiteBrush = new SolidBrush(Color.White))
+            using (SolidBrush grayBrush = new SolidBrush(Color.Gainsboro))
+            using (SolidBrush goldBrush = new SolidBrush(Color.Gold))
+            {
+                DrawCenteredText(g, title, titleFont, titleBrush,
+                    new Rectangle(panelRect.X, panelRect.Y + 35, panelRect.Width, 60));
+
+                DrawCenteredText(g, subtitle, subtitleFont, grayBrush,
+                    new Rectangle(panelRect.X, panelRect.Y + 95, panelRect.Width, 35));
+
+                DrawCenteredText(g, "Score: " + ScoreManager.Score, statsFont, whiteBrush,
+                    new Rectangle(panelRect.X, panelRect.Y + 145, panelRect.Width, 35));
+
+                DrawCenteredText(g, "Coins: " + CoinManager.Coins, statsFont, goldBrush,
+                    new Rectangle(panelRect.X, panelRect.Y + 180, panelRect.Width, 35));
+            }
+        }
+
+        private void DrawCenteredText(Graphics g, string text, Font font, Brush brush, Rectangle rect)
+        {
+            using (StringFormat format = new StringFormat())
+            {
+                format.Alignment = StringAlignment.Center;
+                format.LineAlignment = StringAlignment.Center;
+                g.DrawString(text, font, brush, rect, format);
             }
         }
     }

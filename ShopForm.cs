@@ -1,0 +1,372 @@
+using System;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+using GameEntity;
+
+namespace SpaceShooter
+{
+    public class ShopForm : Form
+    {
+        private readonly Color _neonBlue = Color.FromArgb(0, 210, 255);
+        private readonly Color _neonPink = Color.FromArgb(255, 70, 180);
+        private readonly Color _panelColor = Color.FromArgb(28, 31, 46);
+
+        private Label _coinsLabel;
+        private TabControl _tabControl;
+
+        public ShopForm()
+        {
+            Text = "Shop";
+            ClientSize = new Size(760, 560);
+            StartPosition = FormStartPosition.CenterParent;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            DoubleBuffered = true;
+
+            BuildShop();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            using (LinearGradientBrush brush = new LinearGradientBrush(
+                ClientRectangle,
+                Color.FromArgb(14, 16, 30),
+                Color.FromArgb(55, 48, 78),
+                45f))
+            {
+                e.Graphics.FillRectangle(brush, ClientRectangle);
+            }
+
+            using (SolidBrush blueGlow = new SolidBrush(Color.FromArgb(35, _neonBlue)))
+            using (SolidBrush pinkGlow = new SolidBrush(Color.FromArgb(35, _neonPink)))
+            {
+                e.Graphics.FillEllipse(blueGlow, -80, 60, 200, 200);
+                e.Graphics.FillEllipse(pinkGlow, 610, 370, 220, 220);
+            }
+
+            using (Pen bluePen = new Pen(Color.FromArgb(150, _neonBlue), 2))
+            using (Pen pinkPen = new Pen(Color.FromArgb(120, _neonPink), 2))
+            {
+                e.Graphics.DrawRectangle(bluePen, 24, 24, ClientSize.Width - 48, ClientSize.Height - 48);
+                e.Graphics.DrawRectangle(pinkPen, 34, 34, ClientSize.Width - 68, ClientSize.Height - 68);
+            }
+        }
+
+        private void BuildShop()
+        {
+            Controls.Clear();
+
+            Label title = new Label();
+            title.Text = "SHOP";
+            title.ForeColor = Color.White;
+            title.Font = new Font("Arial", 30, FontStyle.Bold);
+            title.TextAlign = ContentAlignment.MiddleCenter;
+            title.BackColor = Color.Transparent;
+            title.Width = 760;
+            title.Height = 55;
+            title.Left = 0;
+            title.Top = 30;
+            Controls.Add(title);
+
+            _coinsLabel = new Label();
+            _coinsLabel.Text = $"Coins: {CoinManager.Coins}";
+            _coinsLabel.ForeColor = Color.Gold;
+            _coinsLabel.Font = new Font("Arial", 13, FontStyle.Bold);
+            _coinsLabel.BackColor = Color.Transparent;
+            _coinsLabel.Width = 250;
+            _coinsLabel.Height = 30;
+            _coinsLabel.Left = 55;
+            _coinsLabel.Top = 95;
+            Controls.Add(_coinsLabel);
+
+            Label equippedLabel = new Label();
+            equippedLabel.Text =
+                $"Ship: {GameSettings.EquippedShipSkin}   |   " +
+                $"Bullet: {GameSettings.EquippedBulletStyle}   |   " +
+                $"BG: {GameSettings.EquippedBackground}";
+            equippedLabel.ForeColor = Color.Gainsboro;
+            equippedLabel.Font = new Font("Arial", 9, FontStyle.Bold);
+            equippedLabel.BackColor = Color.Transparent;
+            equippedLabel.Width = 430;
+            equippedLabel.Height = 30;
+            equippedLabel.Left = 270;
+            equippedLabel.Top = 95;
+            equippedLabel.TextAlign = ContentAlignment.MiddleRight;
+            Controls.Add(equippedLabel);
+
+            _tabControl = new TabControl();
+            _tabControl.Left = 55;
+            _tabControl.Top = 135;
+            _tabControl.Width = 650;
+            _tabControl.Height = 335;
+            _tabControl.Font = new Font("Arial", 10, FontStyle.Bold);
+
+            AddCategoryTab("Ship Skins");
+            AddCategoryTab("Bullet Styles");
+            AddCategoryTab("Background Themes");
+            AddCategoryTab("Boosters");
+
+            Controls.Add(_tabControl);
+
+            Button backButton = CreateButton("BACK", 290, 495, _neonPink);
+            backButton.Click += (sender, e) => Close();
+            Controls.Add(backButton);
+        }
+
+        private void AddCategoryTab(string category)
+        {
+            TabPage tabPage = new TabPage(category);
+            tabPage.BackColor = Color.FromArgb(22, 25, 38);
+
+            FlowLayoutPanel panel = new FlowLayoutPanel();
+            panel.Dock = DockStyle.Fill;
+            panel.Padding = new Padding(18);
+            panel.AutoScroll = true;
+            panel.BackColor = Color.FromArgb(22, 25, 38);
+
+            foreach (ShopItem item in ShopManager.Items)
+            {
+                if (item.Category == category)
+                    panel.Controls.Add(CreateItemCard(item));
+            }
+
+            tabPage.Controls.Add(panel);
+            _tabControl.TabPages.Add(tabPage);
+        }
+
+        private Panel CreateItemCard(ShopItem item)
+        {
+            Panel card = new Panel();
+            card.Width = 185;
+            card.Height = 250;
+            card.Margin = new Padding(10);
+            card.BackColor = Color.FromArgb(32, 35, 52);
+
+            card.Paint += (sender, e) =>
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+                Rectangle rect = new Rectangle(0, 0, card.Width - 1, card.Height - 1);
+
+                Color accent = GetCategoryColor(item.Category);
+
+                using (SolidBrush brush = new SolidBrush(Color.FromArgb(32, 35, 52)))
+                using (Pen borderPen = new Pen(ShopManager.IsEquipped(item) ? _neonPink : accent, 2))
+                {
+                    e.Graphics.FillRectangle(brush, rect);
+                    e.Graphics.DrawRectangle(borderPen, rect);
+                }
+
+                DrawItemIcon(e.Graphics, item);
+            };
+
+            Label nameLabel = new Label();
+            nameLabel.Text = item.Name;
+            nameLabel.ForeColor = Color.White;
+            nameLabel.Font = new Font("Arial", 11, FontStyle.Bold);
+            nameLabel.TextAlign = ContentAlignment.MiddleCenter;
+            nameLabel.BackColor = Color.Transparent;
+            nameLabel.Width = 165;
+            nameLabel.Height = 30;
+            nameLabel.Left = 10;
+            nameLabel.Top = 90;
+            card.Controls.Add(nameLabel);
+
+            Label descLabel = new Label();
+            descLabel.Text = item.Description;
+            descLabel.ForeColor = Color.Gainsboro;
+            descLabel.Font = new Font("Arial", 8);
+            descLabel.TextAlign = ContentAlignment.MiddleCenter;
+            descLabel.BackColor = Color.Transparent;
+            descLabel.Width = 155;
+            descLabel.Height = 52;
+            descLabel.Left = 15;
+            descLabel.Top = 122;
+            card.Controls.Add(descLabel);
+
+            Label priceLabel = new Label();
+            priceLabel.Text = $"Price: {item.Price} Coins";
+            priceLabel.ForeColor = Color.Gold;
+            priceLabel.Font = new Font("Arial", 9, FontStyle.Bold);
+            priceLabel.TextAlign = ContentAlignment.MiddleCenter;
+            priceLabel.BackColor = Color.Transparent;
+            priceLabel.Width = 155;
+            priceLabel.Height = 24;
+            priceLabel.Left = 15;
+            priceLabel.Top = 176;
+            card.Controls.Add(priceLabel);
+
+            Button actionButton = new Button();
+            actionButton.Width = 125;
+            actionButton.Height = 32;
+            actionButton.Left = 30;
+            actionButton.Top = 208;
+            actionButton.Font = new Font("Arial", 9, FontStyle.Bold);
+            actionButton.BackColor = _panelColor;
+            actionButton.ForeColor = Color.White;
+            actionButton.FlatStyle = FlatStyle.Flat;
+            actionButton.FlatAppearance.BorderColor = ShopManager.IsEquipped(item) ? _neonPink : GetCategoryColor(item.Category);
+            actionButton.FlatAppearance.BorderSize = 2;
+            actionButton.Cursor = Cursors.Hand;
+            actionButton.Text = GetButtonText(item);
+
+            actionButton.Click += (sender, e) =>
+            {
+                HandleItemButton(item);
+            };
+
+            card.Controls.Add(actionButton);
+
+            return card;
+        }
+
+        private string GetButtonText(ShopItem item)
+        {
+            if (ShopManager.IsEquipped(item))
+                return item.Category == "Boosters" ? "ACTIVE" : "EQUIPPED";
+
+            if (ShopManager.IsPurchased(item.Id))
+                return "EQUIP";
+
+            return "BUY";
+        }
+
+        private void HandleItemButton(ShopItem item)
+        {
+            if (ShopManager.IsPurchased(item.Id))
+            {
+                ShopManager.EquipItem(item.Id);
+                BuildShop();
+                return;
+            }
+
+            string message;
+            bool success = ShopManager.BuyItem(item.Id, out message);
+
+            MessageBox.Show(
+                message,
+                success ? "Shop" : "Purchase Failed",
+                MessageBoxButtons.OK,
+                success ? MessageBoxIcon.Information : MessageBoxIcon.Warning
+            );
+
+            BuildShop();
+        }
+
+        private void DrawItemIcon(Graphics g, ShopItem item)
+        {
+            Color accent = GetCategoryColor(item.Category);
+
+            if (item.Category == "Ship Skins")
+            {
+                Point[] ship =
+                {
+                    new Point(92, 24),
+                    new Point(55, 75),
+                    new Point(92, 62),
+                    new Point(130, 75)
+                };
+
+                using (SolidBrush brush = new SolidBrush(Color.FromArgb(200, accent)))
+                using (Pen pen = new Pen(Color.White, 2))
+                {
+                    g.FillPolygon(brush, ship);
+                    g.DrawPolygon(pen, ship);
+                }
+            }
+            else if (item.Category == "Bullet Styles")
+            {
+                using (SolidBrush brush = new SolidBrush(Color.FromArgb(220, accent)))
+                {
+                    g.FillEllipse(brush, 82, 28, 22, 48);
+                }
+
+                using (Pen pen = new Pen(Color.White, 2))
+                {
+                    g.DrawEllipse(pen, 82, 28, 22, 48);
+                }
+            }
+            else if (item.Category == "Background Themes")
+            {
+                Rectangle preview = new Rectangle(47, 25, 90, 55);
+
+                using (LinearGradientBrush brush = new LinearGradientBrush(
+                    preview,
+                    Color.FromArgb(80, accent),
+                    Color.FromArgb(20, 20, 45),
+                    45f))
+                {
+                    g.FillRectangle(brush, preview);
+                }
+
+                using (Pen pen = new Pen(Color.White, 2))
+                {
+                    g.DrawRectangle(pen, preview);
+                }
+
+                using (SolidBrush starBrush = new SolidBrush(Color.White))
+                {
+                    g.FillEllipse(starBrush, 65, 40, 4, 4);
+                    g.FillEllipse(starBrush, 105, 55, 3, 3);
+                    g.FillEllipse(starBrush, 122, 35, 3, 3);
+                }
+            }
+            else if (item.Category == "Boosters")
+            {
+                using (SolidBrush brush = new SolidBrush(Color.FromArgb(220, Color.Gold)))
+                using (Pen pen = new Pen(Color.White, 2))
+                {
+                    g.FillEllipse(brush, 65, 28, 55, 55);
+                    g.DrawEllipse(pen, 65, 28, 55, 55);
+                }
+
+                using (Font font = new Font("Arial", 22, FontStyle.Bold))
+                using (SolidBrush textBrush = new SolidBrush(Color.Black))
+                {
+                    g.DrawString("+", font, textBrush, 78, 36);
+                }
+            }
+        }
+
+        private Color GetCategoryColor(string category)
+        {
+            if (category == "Ship Skins")
+                return _neonBlue;
+
+            if (category == "Bullet Styles")
+                return Color.FromArgb(80, 255, 150);
+
+            if (category == "Background Themes")
+                return _neonPink;
+
+            if (category == "Boosters")
+                return Color.Gold;
+
+            return Color.White;
+        }
+
+        private Button CreateButton(string text, int left, int top, Color borderColor)
+        {
+            Button button = new Button();
+            button.Text = text;
+            button.Left = left;
+            button.Top = top;
+            button.Width = 180;
+            button.Height = 42;
+            button.Font = new Font("Arial", 12, FontStyle.Bold);
+            button.BackColor = _panelColor;
+            button.ForeColor = Color.White;
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderColor = borderColor;
+            button.FlatAppearance.BorderSize = 2;
+            button.Cursor = Cursors.Hand;
+
+            return button;
+        }
+    }
+}

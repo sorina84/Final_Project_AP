@@ -6,7 +6,7 @@ using GameEntity;
 
 namespace SpaceShooter
 {
-    public class MainMenuForm : Form
+    public partial class MainMenuForm : Form
     {
         private readonly Color _darkBlue = Color.FromArgb(15, 18, 32);
         private readonly Color _panelGray = Color.FromArgb(35, 39, 55);
@@ -24,6 +24,14 @@ namespace SpaceShooter
             DoubleBuffered = true;
 
             BuildMenu();
+        }
+
+        //new for music
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            AudioManager.PlayMenuMusic();
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -157,13 +165,16 @@ namespace SpaceShooter
 
         private void PlayButton_Click(object sender, EventArgs e)
         {
+            AudioManager.StopMusic();
             Hide();
 
             using (GameForm gameForm = new GameForm())
             {
                 gameForm.StartPosition = FormStartPosition.CenterScreen;
+                AudioManager.PlayGameMusic();
                 gameForm.ShowDialog();
             }
+            AudioManager.PlayMenuMusic();
 
             Show();
         }
@@ -194,6 +205,7 @@ namespace SpaceShooter
 
         private void QuitButton_Click(object sender, EventArgs e)
         {
+            AudioManager.StopMusic();
             Close();
         }
     }

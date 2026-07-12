@@ -238,6 +238,7 @@ namespace GameEntity
             if (IsGameOver)
             {
                 DrawEndGameOverlay(g);
+                AudioManager.PlayGameOverMusic();
             }
         }
 

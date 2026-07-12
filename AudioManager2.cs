@@ -1,109 +1,126 @@
-﻿
-
-using WMPLib;
-using NAudio.Wave;
+﻿using System;
 using System.IO;
-using System.Windows.Forms;
-
+using System.Media;
 
 namespace GameEntity
 {
     public static class AudioManager
     {
-        private static WindowsMediaPlayer musicPlayer = new WindowsMediaPlayer();
-        private static readonly string MusicFolder =Path.Combine(Application.StartupPath, "Music2");
-
         public static bool MusicEnabled { get; set; } = true;
         public static bool SoundEnabled { get; set; } = true;
-     
-        //---------------------------
+
+        private static SoundPlayer _musicPlayer;
+        private static SoundPlayer _shootPlayer;
+        private static SoundPlayer _coinPlayer;
+        private static SoundPlayer _gameOverPlayer;
+
+        private static string FindSoundPath(string fileName)
+        {
+            return AssetLoader.FindAssetPath(fileName);
+        }
 
         public static void PlayMenuMusic()
         {
-            if (!MusicEnabled)
-                return;
-
-            musicPlayer.controls.stop();
-
-            musicPlayer.URL = @"Music\menu.mp3";
-            musicPlayer.settings.setMode("loop", true);
-            musicPlayer.controls.play();
+            PlayLoopingMusic("menu_music.wav");
         }
-
-        //---------------------------
 
         public static void PlayGameMusic()
         {
-            if (!MusicEnabled)
-                return;
-
-            musicPlayer.controls.stop();
-
-            musicPlayer.URL = @"Music\game.mp3";
-            musicPlayer.settings.setMode("loop", true);
-            musicPlayer.controls.play();
+            PlayLoopingMusic("game_music.wav");
         }
-
-        //---------------------------
 
         public static void PlayGameOverMusic()
-        {
-            if (!MusicEnabled)
-                return;
-
-            musicPlayer.controls.stop();
-
-            musicPlayer.URL = @"Music\gameover.mp3";
-            musicPlayer.settings.setMode("loop", false);
-            musicPlayer.controls.play();
-        }
-
-        //---------------------------
-
-        public static void StopMusic()
-        {
-            musicPlayer.controls.stop();
-        }
-
-        //---------------------------
-
-        private static void PlaySound(string fileName)
         {
             if (!SoundEnabled)
                 return;
 
-            string path = Path.Combine(MusicFolder, fileName);
-
-            if (!File.Exists(path))
-                return;
-
-            var reader = new AudioFileReader(path);
-
-            var output = new WaveOutEvent();
-
-            output.Init(reader);
-
-            output.Play();
-
-            output.PlaybackStopped += (s, e) =>
-            {
-                output.Dispose();
-                reader.Dispose();
-            };
+            PlaySoundEffect(ref _gameOverPlayer, "game_over.wav");
         }
 
-        public static void PlayCoin()
+        public static void StopMusic()
         {
-            PlaySound("coin.mp3");
+            try
+            {
+                if (_musicPlayer != null)
+                {
+                    _musicPlayer.Stop();
+                    _musicPlayer.Dispose();
+                    _musicPlayer = null;
+                }
+            }
+            catch
+            {
+                _musicPlayer = null;
+            }
         }
 
         public static void PlayShoot()
         {
-            PlaySound("shoot.mp3");
+            if (!SoundEnabled)
+                return;
+
+            PlaySoundEffect(ref _shootPlayer, "shoot.wav");
         }
-        public static void PlayExplosion()
+
+        public static void PlayCoin()
         {
-            PlaySound("explosion.mp3");
+            if (!SoundEnabled)
+                return;
+
+            PlaySoundEffect(ref _coinPlayer, "coin.wav");
+        }
+
+        private static void PlayLoopingMusic(string fileName)
+        {
+            if (!MusicEnabled)
+                return;
+
+            try
+            {
+                StopMusic();
+
+                string path = FindSoundPath(fileName);
+
+                if (path == null)
+                    return;
+
+                _musicPlayer = new SoundPlayer(path);
+                _musicPlayer.Load();
+                _musicPlayer.PlayLooping();
+            }
+            catch
+            {
+                // اگر فایل صدا خراب باشد یا wav واقعی نباشد، بازی کرش نکند.
+            }
+        }
+
+        private static void PlaySoundEffect(ref SoundPlayer player, string fileName)
+        {
+            if (!SoundEnabled)
+                return;
+
+            try
+            {
+                string path = FindSoundPath(fileName);
+
+                if (path == null)
+                    return;
+
+                if (player != null)
+                {
+                    player.Stop();
+                    player.Dispose();
+                    player = null;
+                }
+
+                player = new SoundPlayer(path);
+                player.Load();
+                player.Play();
+            }
+            catch
+            {
+                // اگر افکت صدا اجرا نشد، بازی متوقف نشود.
+            }
         }
     }
 }

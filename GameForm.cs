@@ -100,6 +100,9 @@ namespace SpaceShooter
                 _isClosingAfterGameEnd = true;
                 _gameTimer.Stop();
 
+                AudioManager.StopMusic();
+                AudioManager.PlayGameOverMusic();
+
                 _backToMenuButton.Visible = true;
                 _backToMenuButton.BringToFront();
 

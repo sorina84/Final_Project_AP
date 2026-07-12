@@ -9,20 +9,27 @@ namespace GameEntity
         public int MaxHp { get; set; }
         public int ScoreValue { get; set; }
         public int CoinValue { get; set; }
+
         protected Image Sprite { get; set; }
 
-        public virtual int Width => 40;
-        public virtual int Height => 40;
+        public virtual int Width => 60;
+        public virtual int Height => 60;
 
         public RectangleF Bounds
         {
             get
             {
-                return new RectangleF(X - Width / 2f, Y - Height / 2f, Width, Height);
+                return new RectangleF(
+                    X - Width / 2f,
+                    Y - Height / 2f,
+                    Width,
+                    Height
+                );
             }
         }
 
-        protected Enemy(float x, float y, float speed) : base(x, y, speed)
+        protected Enemy(float x, float y, float speed)
+            : base(x, y, speed)
         {
         }
 
@@ -33,7 +40,7 @@ namespace GameEntity
 
         public bool IsOutOfScreen(int screenHeight)
         {
-            return Y - Height / 2f > screenHeight + 50;
+            return Y - Height / 2f > screenHeight + 60;
         }
 
         public virtual void ResetPosition(float x, float y)

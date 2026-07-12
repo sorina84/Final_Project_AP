@@ -73,22 +73,14 @@ namespace SpaceShooter
             title.Top = 30;
             Controls.Add(title);
 
-            _coinsLabel = new Label();
-            _coinsLabel.Text = $"Coins: {CoinManager.Coins}";
-            _coinsLabel.ForeColor = Color.Gold;
-            _coinsLabel.Font = new Font("Arial", 13, FontStyle.Bold);
-            _coinsLabel.BackColor = Color.Transparent;
-            _coinsLabel.Width = 250;
-            _coinsLabel.Height = 30;
-            _coinsLabel.Left = 55;
-            _coinsLabel.Top = 95;
-            Controls.Add(_coinsLabel);
+            AddCoinsHeader();
 
             Label equippedLabel = new Label();
             equippedLabel.Text =
-                $"Ship: {GameSettings.EquippedShipSkin}   |   " +
-                $"Bullet: {GameSettings.EquippedBulletStyle}   |   " +
-                $"BG: {GameSettings.EquippedBackground}";
+                "Ship: " + GameSettings.EquippedShipSkin + "   |   " +
+                "Bullet: " + GameSettings.EquippedBulletStyle + "   |   " +
+                "BG: " + GameSettings.EquippedBackground;
+
             equippedLabel.ForeColor = Color.Gainsboro;
             equippedLabel.Font = new Font("Arial", 9, FontStyle.Bold);
             equippedLabel.BackColor = Color.Transparent;
@@ -116,6 +108,40 @@ namespace SpaceShooter
             Button backButton = CreateButton("BACK", 290, 495, _neonPink);
             backButton.Click += (sender, e) => Close();
             Controls.Add(backButton);
+        }
+
+        private void AddCoinsHeader()
+        {
+            PictureBox goldCoinIcon = new PictureBox();
+            goldCoinIcon.Image = AssetLoader.LoadImage("coin_gold.png");
+            goldCoinIcon.SizeMode = PictureBoxSizeMode.Zoom;
+            goldCoinIcon.BackColor = Color.Transparent;
+            goldCoinIcon.Width = 28;
+            goldCoinIcon.Height = 28;
+            goldCoinIcon.Left = 55;
+            goldCoinIcon.Top = 95;
+            Controls.Add(goldCoinIcon);
+
+            PictureBox silverCoinIcon = new PictureBox();
+            silverCoinIcon.Image = AssetLoader.LoadImage("coin_silver.png");
+            silverCoinIcon.SizeMode = PictureBoxSizeMode.Zoom;
+            silverCoinIcon.BackColor = Color.Transparent;
+            silverCoinIcon.Width = 26;
+            silverCoinIcon.Height = 26;
+            silverCoinIcon.Left = 87;
+            silverCoinIcon.Top = 96;
+            Controls.Add(silverCoinIcon);
+
+            _coinsLabel = new Label();
+            _coinsLabel.Text = "Coins: " + CoinManager.Coins;
+            _coinsLabel.ForeColor = Color.Gold;
+            _coinsLabel.Font = new Font("Arial", 13, FontStyle.Bold);
+            _coinsLabel.BackColor = Color.Transparent;
+            _coinsLabel.Width = 180;
+            _coinsLabel.Height = 30;
+            _coinsLabel.Left = 120;
+            _coinsLabel.Top = 95;
+            Controls.Add(_coinsLabel);
         }
 
         private void AddCategoryTab(string category)
@@ -152,25 +178,23 @@ namespace SpaceShooter
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
                 Rectangle rect = new Rectangle(0, 0, card.Width - 1, card.Height - 1);
-
                 Color accent = GetCategoryColor(item.Category);
 
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(32, 35, 52)))
                 using (Pen borderPen = new Pen(ShopManager.IsEquipped(item) ? _neonPink : accent, 2))
                 {
-                    e.Graphics.FillRectangle(brush, rect);
                     e.Graphics.DrawRectangle(borderPen, rect);
                 }
-
-                DrawItemIcon(e.Graphics, item);
             };
+
+            PictureBox preview = CreatePreviewPictureBox(item);
+            card.Controls.Add(preview);
 
             Label nameLabel = new Label();
             nameLabel.Text = item.Name;
             nameLabel.ForeColor = Color.White;
             nameLabel.Font = new Font("Arial", 11, FontStyle.Bold);
             nameLabel.TextAlign = ContentAlignment.MiddleCenter;
-            nameLabel.BackColor = Color.Transparent;
+            nameLabel.BackColor = card.BackColor;
             nameLabel.Width = 165;
             nameLabel.Height = 30;
             nameLabel.Left = 10;
@@ -182,7 +206,7 @@ namespace SpaceShooter
             descLabel.ForeColor = Color.Gainsboro;
             descLabel.Font = new Font("Arial", 8);
             descLabel.TextAlign = ContentAlignment.MiddleCenter;
-            descLabel.BackColor = Color.Transparent;
+            descLabel.BackColor = card.BackColor;
             descLabel.Width = 155;
             descLabel.Height = 52;
             descLabel.Left = 15;
@@ -190,11 +214,16 @@ namespace SpaceShooter
             card.Controls.Add(descLabel);
 
             Label priceLabel = new Label();
-            priceLabel.Text = $"Price: {item.Price} Coins";
+
+            if (item.Price <= 0)
+                priceLabel.Text = "Price: Free";
+            else
+                priceLabel.Text = "Price: " + item.Price + " Coins";
+
             priceLabel.ForeColor = Color.Gold;
             priceLabel.Font = new Font("Arial", 9, FontStyle.Bold);
             priceLabel.TextAlign = ContentAlignment.MiddleCenter;
-            priceLabel.BackColor = Color.Transparent;
+            priceLabel.BackColor = card.BackColor;
             priceLabel.Width = 155;
             priceLabel.Height = 24;
             priceLabel.Left = 15;
@@ -225,10 +254,116 @@ namespace SpaceShooter
             return card;
         }
 
+        private PictureBox CreatePreviewPictureBox(ShopItem item)
+        {
+            PictureBox pictureBox = new PictureBox();
+
+            Rectangle rect = GetPreviewRectangle(item);
+
+            pictureBox.Left = rect.Left;
+            pictureBox.Top = rect.Top;
+            pictureBox.Width = rect.Width;
+            pictureBox.Height = rect.Height;
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox.BackColor = Color.FromArgb(18, 20, 32);
+
+            Image image = AssetLoader.LoadImage(item.PreviewFileName);
+
+            if (image != null)
+            {
+                pictureBox.Image = image;
+            }
+            else
+            {
+                if (item.Category == "Boosters")
+                    pictureBox.Image = CreateBoosterFallbackBitmap(pictureBox.Width, pictureBox.Height);
+                else
+                    pictureBox.Image = CreateMissingImageBitmap(pictureBox.Width, pictureBox.Height, item.PreviewFileName);
+            }
+
+            return pictureBox;
+        }
+
+        private Bitmap CreateMissingImageBitmap(int width, int height, string fileName)
+        {
+            Bitmap bitmap = new Bitmap(width, height);
+
+            using (Graphics g = Graphics.FromImage(bitmap))
+            using (SolidBrush backgroundBrush = new SolidBrush(Color.FromArgb(50, 20, 20)))
+            using (SolidBrush textBrush = new SolidBrush(Color.White))
+            using (Pen borderPen = new Pen(Color.Red, 2))
+            using (Font font = new Font("Arial", 7, FontStyle.Bold))
+            {
+                g.Clear(Color.FromArgb(18, 20, 32));
+                g.FillRectangle(backgroundBrush, 0, 0, width, height);
+                g.DrawRectangle(borderPen, 1, 1, width - 3, height - 3);
+
+                string text = "MISSING\n" + fileName;
+
+                using (StringFormat format = new StringFormat())
+                {
+                    format.Alignment = StringAlignment.Center;
+                    format.LineAlignment = StringAlignment.Center;
+
+                    g.DrawString(text, font, textBrush, new RectangleF(2, 2, width - 4, height - 4), format);
+                }
+            }
+
+            return bitmap;
+        }
+
+        private Bitmap CreateBoosterFallbackBitmap(int width, int height)
+        {
+            Bitmap bitmap = new Bitmap(width, height);
+
+            using (Graphics g = Graphics.FromImage(bitmap))
+            using (SolidBrush goldBrush = new SolidBrush(Color.Gold))
+            using (SolidBrush darkBrush = new SolidBrush(Color.FromArgb(18, 20, 32)))
+            using (Pen whitePen = new Pen(Color.White, 2))
+            using (Font font = new Font("Arial", 28, FontStyle.Bold))
+            {
+                g.Clear(Color.FromArgb(18, 20, 32));
+                g.FillEllipse(goldBrush, 10, 5, width - 20, height - 10);
+                g.DrawEllipse(whitePen, 10, 5, width - 20, height - 10);
+
+                using (StringFormat format = new StringFormat())
+                {
+                    format.Alignment = StringAlignment.Center;
+                    format.LineAlignment = StringAlignment.Center;
+
+                    g.DrawString("+", font, darkBrush, new RectangleF(0, 0, width, height), format);
+                }
+            }
+
+            return bitmap;
+        }
+
+        private Rectangle GetPreviewRectangle(ShopItem item)
+        {
+            if (item.Category == "Ship Skins")
+                return new Rectangle(35, 14, 115, 72);
+
+            if (item.Category == "Bullet Styles")
+                return new Rectangle(62, 12, 60, 76);
+
+            if (item.Category == "Background Themes")
+                return new Rectangle(28, 16, 128, 68);
+
+            if (item.Category == "Boosters")
+                return new Rectangle(55, 18, 75, 68);
+
+            return new Rectangle(45, 18, 95, 68);
+        }
+
         private string GetButtonText(ShopItem item)
         {
             if (ShopManager.IsEquipped(item))
-                return item.Category == "Boosters" ? "ACTIVE" : "EQUIPPED";
+            {
+                if (item.Category == "Boosters")
+                    return "ACTIVE";
+
+                return "EQUIPPED";
+            }
 
             if (ShopManager.IsPurchased(item.Id))
                 return "EQUIP";
@@ -238,7 +373,7 @@ namespace SpaceShooter
 
         private void HandleItemButton(ShopItem item)
         {
-            if (ShopManager.IsPurchased(item.Id))
+            if (ShopManager.IsPurchased(item.Id) && item.Category != "Boosters")
             {
                 ShopManager.EquipItem(item.Id);
                 BuildShop();
@@ -256,81 +391,6 @@ namespace SpaceShooter
             );
 
             BuildShop();
-        }
-
-        private void DrawItemIcon(Graphics g, ShopItem item)
-        {
-            Color accent = GetCategoryColor(item.Category);
-
-            if (item.Category == "Ship Skins")
-            {
-                Point[] ship =
-                {
-                    new Point(92, 24),
-                    new Point(55, 75),
-                    new Point(92, 62),
-                    new Point(130, 75)
-                };
-
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(200, accent)))
-                using (Pen pen = new Pen(Color.White, 2))
-                {
-                    g.FillPolygon(brush, ship);
-                    g.DrawPolygon(pen, ship);
-                }
-            }
-            else if (item.Category == "Bullet Styles")
-            {
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(220, accent)))
-                {
-                    g.FillEllipse(brush, 82, 28, 22, 48);
-                }
-
-                using (Pen pen = new Pen(Color.White, 2))
-                {
-                    g.DrawEllipse(pen, 82, 28, 22, 48);
-                }
-            }
-            else if (item.Category == "Background Themes")
-            {
-                Rectangle preview = new Rectangle(47, 25, 90, 55);
-
-                using (LinearGradientBrush brush = new LinearGradientBrush(
-                    preview,
-                    Color.FromArgb(80, accent),
-                    Color.FromArgb(20, 20, 45),
-                    45f))
-                {
-                    g.FillRectangle(brush, preview);
-                }
-
-                using (Pen pen = new Pen(Color.White, 2))
-                {
-                    g.DrawRectangle(pen, preview);
-                }
-
-                using (SolidBrush starBrush = new SolidBrush(Color.White))
-                {
-                    g.FillEllipse(starBrush, 65, 40, 4, 4);
-                    g.FillEllipse(starBrush, 105, 55, 3, 3);
-                    g.FillEllipse(starBrush, 122, 35, 3, 3);
-                }
-            }
-            else if (item.Category == "Boosters")
-            {
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(220, Color.Gold)))
-                using (Pen pen = new Pen(Color.White, 2))
-                {
-                    g.FillEllipse(brush, 65, 28, 55, 55);
-                    g.DrawEllipse(pen, 65, 28, 55, 55);
-                }
-
-                using (Font font = new Font("Arial", 22, FontStyle.Bold))
-                using (SolidBrush textBrush = new SolidBrush(Color.Black))
-                {
-                    g.DrawString("+", font, textBrush, 78, 36);
-                }
-            }
         }
 
         private Color GetCategoryColor(string category)

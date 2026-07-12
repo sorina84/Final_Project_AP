@@ -13,13 +13,14 @@ namespace GameEntity
         public List<Bullet> EnemyBullets { get; private set; }
         public List<PowerUp> PowerUps { get; private set; }
         public List<Coin> Coins { get; private set; }
+        public List<Explosion> Explosions { get; private set; }
 
         public bool IsGameOver { get; private set; }
         public bool IsWin { get; private set; }
         public bool IsPaused { get; set; }
 
-        public int ScreenWidth { get; }
-        public int ScreenHeight { get; }
+        public int ScreenWidth { get; private set; }
+        public int ScreenHeight { get; private set; }
 
         private bool _leftPressed;
         private bool _rightPressed;
@@ -31,11 +32,14 @@ namespace GameEntity
         private const float PowerUpSpawnInterval = 10f;
 
         private readonly Random _random = new Random();
+        private Image _background;
 
         public GameWorld(int width, int height)
         {
             ScreenWidth = width;
             ScreenHeight = height;
+
+            LoadBackground();
 
             Player = new Player(width / 2f, height - 100f);
             Player.ScreenWidth = width;
@@ -48,6 +52,7 @@ namespace GameEntity
             EnemyBullets = new List<Bullet>();
             PowerUps = new List<PowerUp>();
             Coins = new List<Coin>();
+            Explosions = new List<Explosion>();
 
             IsGameOver = false;
             IsWin = false;
@@ -56,7 +61,28 @@ namespace GameEntity
             _powerUpSpawnTimer = 0f;
 
             ScoreManager.Reset();
-            //CoinManager.Reset();
+        }
+
+        private void LoadBackground()
+        {
+            switch (GameSettings.EquippedBackground)
+            {
+                case "BlueNebulaBackground":
+                    _background = AssetLoader.LoadImage("back1.jpg");
+                    break;
+
+                case "PinkGalaxyBackground":
+                    _background = AssetLoader.LoadImage("back2.jpg");
+                    break;
+
+                case "MarsBackground":
+                    _background = AssetLoader.LoadImage("back3.jpg");
+                    break;
+
+                default:
+                    _background = AssetLoader.LoadImage("backgound_defult.jpg");
+                    break;
+            }
         }
 
         public void SetInput(bool left, bool right, bool up, bool down, bool shoot)
@@ -79,7 +105,7 @@ namespace GameEntity
 
             if (_shootPressed && Player.CanShoot())
             {
-                var newBullets = Player.Shoot();
+                List<Bullet> newBullets = Player.Shoot();
                 PlayerBullets.AddRange(newBullets);
             }
 
@@ -89,6 +115,8 @@ namespace GameEntity
             UpdateEnemyAttacks();
             UpdateEnemyBullets(deltaTime);
             UpdatePowerUps(deltaTime);
+            UpdateCoins(deltaTime);
+            UpdateExplosions(deltaTime);
             SpawnPowerUpsByTimer(deltaTime);
 
             CollisionManager.CheckCollisions(
@@ -98,6 +126,7 @@ namespace GameEntity
                 EnemyBullets,
                 PowerUps,
                 Coins,
+                Explosions,
                 WaveManager.CurrentWave
             );
 
@@ -146,7 +175,7 @@ namespace GameEntity
                 if (!enemy.IsActive)
                     continue;
 
-                var bullets = enemy.Attack();
+                List<Bullet> bullets = enemy.Attack();
 
                 if (bullets != null && bullets.Count > 0)
                     EnemyBullets.AddRange(bullets);
@@ -169,6 +198,12 @@ namespace GameEntity
         {
             foreach (Coin coin in Coins)
                 coin.Update(deltaTime);
+        }
+
+        private void UpdateExplosions(float deltaTime)
+        {
+            foreach (Explosion explosion in Explosions)
+                explosion.Update(deltaTime);
         }
 
         private void SpawnPowerUpsByTimer(float deltaTime)
@@ -198,17 +233,18 @@ namespace GameEntity
             PlayerBullets.RemoveAll(b => !b.IsActive);
             EnemyBullets.RemoveAll(b => !b.IsActive);
             PowerUps.RemoveAll(p => !p.IsActive);
-            WaveManager.Enemies.RemoveAll(e => !e.IsActive);
             Coins.RemoveAll(c => !c.IsActive);
+            Explosions.RemoveAll(e => !e.IsActive);
+            WaveManager.Enemies.RemoveAll(e => !e.IsActive);
         }
 
         public void Render(Graphics g)
         {
-            g.Clear(Color.Black);
+            DrawBackground(g);
 
             foreach (PowerUp powerUp in PowerUps)
                 powerUp.Draw(g);
-            
+
             foreach (Coin coin in Coins)
                 coin.Draw(g);
 
@@ -223,62 +259,101 @@ namespace GameEntity
 
             Player.Draw(g);
 
+            foreach (Explosion explosion in Explosions)
+                explosion.Draw(g);
+
             DrawHUD(g);
+
+            if (WaveManager.IsShowingStatusMessage)
+                DrawWaveStatusMessage(g, WaveManager.StatusMessage);
 
             if (IsPaused)
                 DrawCenteredMessage(g, "PAUSED");
 
             if (IsGameOver)
-            {
-                if (IsWin)
-                    DrawCenteredMessage(g, "YOU WIN!");
-                else
-                    DrawCenteredMessage(g, "GAME OVER");
-            }
-            if (IsGameOver)
-            {
                 DrawEndGameOverlay(g);
-                AudioManager.PlayGameOverMusic();
-            }
+        }
+
+        private void DrawBackground(Graphics g)
+        {
+            if (_background != null)
+                g.DrawImage(_background, 0, 0, ScreenWidth, ScreenHeight);
+            else
+                g.Clear(Color.Black);
         }
 
         private void DrawHUD(Graphics g)
         {
-            using (var font = new Font("Arial", 14))
+            using (Font font = new Font("Arial", 14, FontStyle.Bold))
             {
-                g.DrawString($"Wave: {WaveManager.CurrentWave}", font, Brushes.White, 10, 10);
-                g.DrawString($"HP: {Player.Hp}", font, Brushes.White, 10, 35);
-                g.DrawString($"Lives: {Player.Lives}", font, Brushes.White, 10, 60);
-                g.DrawString($"Score: {ScoreManager.Score}", font, Brushes.White, 10, 85);
-                g.DrawString($"Coins: {CoinManager.Coins}", font, Brushes.White, 10, 110);
+                g.DrawString("Wave: " + WaveManager.CurrentWave, font, Brushes.White, 10, 10);
+                g.DrawString("HP: " + Player.Hp, font, Brushes.White, 10, 35);
+                g.DrawString("Lives: " + Player.Lives, font, Brushes.White, 10, 60);
+                g.DrawString("Score: " + ScoreManager.Score, font, Brushes.White, 10, 85);
+                g.DrawString("Coins: " + CoinManager.Coins, font, Brushes.Gold, 10, 110);
 
-                int y = 140;
+                g.DrawString(
+                    "Enemies: " + WaveManager.SpawnedEnemiesInWave + "/" + WaveManager.TotalEnemiesInWave +
+                    "  Alive: " + WaveManager.AliveEnemiesCount,
+                    font,
+                    Brushes.White,
+                    10,
+                    135
+                );
+
+                int y = 165;
 
                 if (Player.IsShield)
                 {
-                    g.DrawString($"Shield: {Player.ShieldTimeLeft:0.0}s", font, Brushes.Cyan, 10, y);
+                    g.DrawString("Shield: " + Player.ShieldTimeLeft.ToString("0.0") + "s", font, Brushes.Cyan, 10, y);
                     y += 25;
                 }
 
                 if (Player.IsTripleShot)
                 {
-                    g.DrawString($"Triple Shot: {Player.TripleShotTimeLeft:0.0}s", font, Brushes.Orange, 10, y);
+                    g.DrawString("Triple Shot: " + Player.TripleShotTimeLeft.ToString("0.0") + "s", font, Brushes.Orange, 10, y);
                     y += 25;
                 }
 
                 if (Player.IsFireRateBoost)
                 {
-                    g.DrawString($"Fire Boost: {Player.FireRateBoostTimeLeft:0.0}s", font, Brushes.Gold, 10, y);
+                    g.DrawString("Fire Boost: " + Player.FireRateBoostTimeLeft.ToString("0.0") + "s", font, Brushes.Gold, 10, y);
                 }
+            }
+        }
+
+        private void DrawWaveStatusMessage(Graphics g, string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+
+            Rectangle rect = new Rectangle(
+                ScreenWidth / 2 - 230,
+                70,
+                460,
+                70
+            );
+
+            using (SolidBrush panelBrush = new SolidBrush(Color.FromArgb(190, 10, 15, 32)))
+            using (Pen borderPen = new Pen(Color.FromArgb(0, 210, 255), 2))
+            using (Font font = new Font("Arial", 22, FontStyle.Bold))
+            using (SolidBrush textBrush = new SolidBrush(Color.White))
+            using (StringFormat format = new StringFormat())
+            {
+                format.Alignment = StringAlignment.Center;
+                format.LineAlignment = StringAlignment.Center;
+
+                g.FillRectangle(panelBrush, rect);
+                g.DrawRectangle(borderPen, rect);
+                g.DrawString(message, font, textBrush, rect, format);
             }
         }
 
         private void DrawCenteredMessage(Graphics g, string message)
         {
-            using (var font = new Font("Arial", 32, FontStyle.Bold))
+            using (Font font = new Font("Arial", 32, FontStyle.Bold))
             {
                 SizeF size = g.MeasureString(message, font);
-
                 float x = (ScreenWidth - size.Width) / 2f;
                 float y = (ScreenHeight - size.Height) / 2f;
 
@@ -314,9 +389,7 @@ namespace GameEntity
             }
 
             string title = IsWin ? "YOU WIN!" : "GAME OVER";
-            string subtitle = IsWin
-                ? "ALL WAVES CLEARED"
-                : "MISSION FAILED";
+            string subtitle = IsWin ? "ALL WAVES CLEARED" : "MISSION FAILED";
 
             using (Font titleFont = new Font("Arial", 40, FontStyle.Bold))
             using (Font subtitleFont = new Font("Arial", 15, FontStyle.Bold))

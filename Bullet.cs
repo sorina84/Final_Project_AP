@@ -19,7 +19,12 @@ namespace GameEntity
         {
             get
             {
-                return new RectangleF(X - Width / 2f, Y - Height / 2f, Width, Height);
+                return new RectangleF(
+                    X - Width / 2f,
+                    Y - Height / 2f,
+                    Width,
+                    Height
+                );
             }
         }
 
@@ -28,7 +33,6 @@ namespace GameEntity
         {
             IsPlayerBullet = isPlayerBullet;
             Damage = isPlayerBullet ? 10 : 15;
-
             VelocityX = 0f;
             VelocityY = isPlayerBullet ? -speed : speed;
 
@@ -40,7 +44,6 @@ namespace GameEntity
         {
             IsPlayerBullet = isPlayerBullet;
             Damage = damage;
-
             VelocityX = velocityX;
             VelocityY = velocityY;
 
@@ -53,7 +56,21 @@ namespace GameEntity
             {
                 Width = 32;
                 Height = 52;
-                _sprite = AssetLoader.LoadImage("Bullet_player.png");
+
+                switch (GameSettings.EquippedBulletStyle)
+                {
+                    case "GreenBullet":
+                        _sprite = AssetLoader.LoadImage("bullet_player_green.png");
+                        break;
+
+                    case "PlasmaBullet":
+                        _sprite = AssetLoader.LoadImage("bullet_player_plasma.png");
+                        break;
+
+                    default:
+                        _sprite = AssetLoader.LoadImage("Bullet_player.png");
+                        break;
+                }
             }
             else if (Damage >= 20)
             {

@@ -77,9 +77,6 @@ namespace GameEntity
         private float _shootTimer;
         private const float ShootInterval = 1.5f;
 
-        public override int Width => 60;
-        public override int Height => 60;
-
         public ShooterEnemy(float x, float y)
             : base(x, y, 100f)
         {
@@ -89,6 +86,7 @@ namespace GameEntity
             MaxHp = Hp;
             ScoreValue = 40;
             CoinValue = 3;
+
             _shootTimer = 0f;
         }
 
@@ -103,7 +101,7 @@ namespace GameEntity
 
         public override List<Bullet> Attack()
         {
-            var bullets = new List<Bullet>();
+            List<Bullet> bullets = new List<Bullet>();
 
             if (_shootTimer >= ShootInterval)
             {
@@ -117,16 +115,13 @@ namespace GameEntity
         public override void Draw(Graphics g)
         {
             DrawSpriteOrFallback(g, Brushes.Green);
-        }  
+        }
     }
 
     public class HeavyTankEnemy : Enemy
     {
         private float _shootTimer;
         private const float ShootInterval = 2.5f;
-
-        public override int Width => 60;
-        public override int Height => 60;
 
         public HeavyTankEnemy(float x, float y)
             : base(x, y, 60f)
@@ -137,6 +132,7 @@ namespace GameEntity
             MaxHp = Hp;
             ScoreValue = 100;
             CoinValue = 10;
+
             _shootTimer = 0f;
         }
 
@@ -151,7 +147,7 @@ namespace GameEntity
 
         public override List<Bullet> Attack()
         {
-            var bullets = new List<Bullet>();
+            List<Bullet> bullets = new List<Bullet>();
 
             if (_shootTimer < ShootInterval)
                 return bullets;
@@ -160,7 +156,6 @@ namespace GameEntity
 
             float bulletSpeed = 220f;
             int damage = 20;
-
             float diagonal = bulletSpeed * 0.7071f;
 
             bullets.Add(new Bullet(X, Y, 0f, bulletSpeed, false, damage));
@@ -186,10 +181,14 @@ namespace GameEntity
         {
             float barWidth = Width;
             float barHeight = 6f;
+
             float hpPercent = MaxHp <= 0 ? 0f : (float)Hp / MaxHp;
 
             if (hpPercent < 0f)
                 hpPercent = 0f;
+
+            if (hpPercent > 1f)
+                hpPercent = 1f;
 
             g.FillRectangle(
                 Brushes.Black,
@@ -206,6 +205,14 @@ namespace GameEntity
                 barWidth * hpPercent,
                 barHeight
             );
+
+            g.DrawRectangle(
+                Pens.White,
+                X - barWidth / 2f,
+                Y - Height / 2f - 12f,
+                barWidth,
+                barHeight
+            );
         }
     }
 
@@ -213,11 +220,8 @@ namespace GameEntity
     {
         private readonly Player _targetPlayer;
 
-        public override int Width => 60;
-        public override int Height => 60;
-
         public TerroristEnemy(Player targetPlayer, float x, float y)
-            : base(x, y, 170f)
+            : base(x, y, 180f)
         {
             Sprite = AssetLoader.LoadImage("enemy_terrorist.png");
             _targetPlayer = targetPlayer;
@@ -257,6 +261,18 @@ namespace GameEntity
         public override void Draw(Graphics g)
         {
             DrawSpriteOrFallback(g, Brushes.Purple, true);
+
+            using (Pen warningPen = new Pen(Color.FromArgb(180, Color.OrangeRed), 2))
+            {
+                float radius = Width / 2f + 8f;
+                g.DrawEllipse(
+                    warningPen,
+                    X - radius,
+                    Y - radius,
+                    radius * 2f,
+                    radius * 2f
+                );
+            }
         }
     }
 }

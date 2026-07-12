@@ -32,6 +32,11 @@ namespace GameEntity
         private const float Friction = 0.92f;
         private const float MaxSpeed = 420f;
 
+        private const int HealthBarWidth = 60;
+        private const int HealthBarHeight = 7;
+        private const int HealthBarOffsetY = 8;
+        private const int HealthBarBottomPadding = 2;
+
         private float _shootCooldown = 0.2f;
         private float _timeSinceLastShot = 0.2f;
 
@@ -43,14 +48,28 @@ namespace GameEntity
         {
             get
             {
-                return new RectangleF(X - Width / 2f, Y - Height / 2f, Width, Height);
+                return new RectangleF(
+                    X - Width / 2f,
+                    Y - Height / 2f,
+                    Width,
+                    Height
+                );
             }
         }
 
         public Player(float x, float y) : base(x, y, 0f)
         {
             Hp = 100;
-            Lives = 3;
+
+            if (GameSettings.ExtraLifeBoosterEnabled)
+            {
+                Lives = 4;
+                GameSettings.ExtraLifeBoosterEnabled = false;
+            }
+            else
+            {
+                Lives = 3;
+            }
 
             VelocityX = 0f;
             VelocityY = 0f;
@@ -63,13 +82,21 @@ namespace GameEntity
 
         public void LoadSprite()
         {
-            try
+            Sprite = AssetLoader.LoadImage(GetShipSpriteFileName());
+        }
+
+        private string GetShipSpriteFileName()
+        {
+            switch (GameSettings.EquippedShipSkin)
             {
-                Sprite = AssetLoader.LoadImage("C:/Users/negar/source/repos/SpaceShooter/SpaceShooter/Assets/player.png");
-            }
-            catch
-            {
-                Sprite = null;
+                case "FalconShip":
+                    return "ship_red_eagle.png";
+
+                case "CyberShip":
+                    return "ship_cyber_neon.png";
+
+                default:
+                    return "player.png";
             }
         }
 
@@ -100,7 +127,7 @@ namespace GameEntity
 
         public List<Bullet> Shoot()
         {
-            var bullets = new List<Bullet>();
+            List<Bullet> bullets = new List<Bullet>();
 
             if (!CanShoot())
                 return bullets;
@@ -219,9 +246,12 @@ namespace GameEntity
             float halfWidth = Width / 2f;
             float halfHeight = Height / 2f;
 
-            if (X - halfWidth < 0)
+            float horizontalHalfLimit = Math.Max(halfWidth, HealthBarWidth / 2f);
+            float bottomExtra = HealthBarOffsetY + HealthBarHeight + HealthBarBottomPadding;
+
+            if (X - horizontalHalfLimit < 0)
             {
-                X = halfWidth;
+                X = horizontalHalfLimit;
                 VelocityX = 0f;
             }
 
@@ -231,15 +261,15 @@ namespace GameEntity
                 VelocityY = 0f;
             }
 
-            if (X + halfWidth > ScreenWidth)
+            if (X + horizontalHalfLimit > ScreenWidth)
             {
-                X = ScreenWidth - halfWidth;
+                X = ScreenWidth - horizontalHalfLimit;
                 VelocityX = 0f;
             }
 
-            if (Y + halfHeight > ScreenHeight)
+            if (Y + halfHeight + bottomExtra > ScreenHeight)
             {
-                Y = ScreenHeight - halfHeight;
+                Y = ScreenHeight - halfHeight - bottomExtra;
                 VelocityY = 0f;
             }
         }
@@ -270,6 +300,39 @@ namespace GameEntity
 
                 g.FillPolygon(Brushes.Cyan, ship);
             }
+            DrawHealthBar(g);
+        }
+
+        private void DrawHealthBar(Graphics g)
+        {
+            float hpPercent = Hp / 100f;
+
+            if (hpPercent < 0f)
+                hpPercent = 0f;
+
+            if (hpPercent > 1f)
+                hpPercent = 1f;
+
+            int x = (int)(X - HealthBarWidth / 2f);
+            int y = (int)(Y + Height / 2f + HealthBarOffsetY);
+
+            Color hpColor;
+
+            if (hpPercent > 0.6f)
+                hpColor = Color.LimeGreen;
+            else if (hpPercent > 0.3f)
+                hpColor = Color.Orange;
+            else
+                hpColor = Color.Red;
+
+            using (SolidBrush backgroundBrush = new SolidBrush(Color.FromArgb(150, 80, 0, 0)))
+            using (SolidBrush hpBrush = new SolidBrush(hpColor))
+            {
+                g.FillRectangle(backgroundBrush, x, y, HealthBarWidth, HealthBarHeight);
+                g.FillRectangle(hpBrush, x, y, (int)(HealthBarWidth * hpPercent), HealthBarHeight);
+            }
+
+            g.DrawRectangle(Pens.White, x, y, HealthBarWidth, HealthBarHeight);
         }
 
         public void Reset()
@@ -289,6 +352,7 @@ namespace GameEntity
             _shieldTimer = 0f;
             _tripleShotTimer = 0f;
             _fireRateBoostTimer = 0f;
+
             _shootCooldown = 0.2f;
             _timeSinceLastShot = 0.2f;
 

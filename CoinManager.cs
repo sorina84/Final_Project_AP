@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace GameEntity
+﻿namespace GameEntity
 {
     public static class CoinManager
     {

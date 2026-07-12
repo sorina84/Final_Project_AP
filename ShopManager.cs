@@ -9,14 +9,22 @@ namespace GameEntity
         public string Category { get; private set; }
         public string Description { get; private set; }
         public int Price { get; private set; }
+        public string PreviewFileName { get; private set; }
 
-        public ShopItem(string id, string name, string category, string description, int price)
+        public ShopItem(
+            string id,
+            string name,
+            string category,
+            string description,
+            int price,
+            string previewFileName)
         {
             Id = id;
             Name = name;
             Category = category;
             Description = description;
             Price = price;
+            PreviewFileName = previewFileName;
         }
     }
 
@@ -25,68 +33,124 @@ namespace GameEntity
         private static readonly List<ShopItem> _items = new List<ShopItem>
         {
             new ShopItem(
-                "FalconShip",
-                "Falcon Ship",
+                "DefaultShip",
+                "Default Ship",
                 "Ship Skins",
-                "A sharp and fast-looking player ship skin.",
-                40
+                "Original player ship.",
+                0,
+                "player.png"
+            ),
+
+            new ShopItem(
+                "FalconShip",
+                "Red Eagle Ship",
+                "Ship Skins",
+                "A red and white fighter ship skin.",
+                40,
+                "ship_red_eagle.png"
             ),
 
             new ShopItem(
                 "CyberShip",
-                "Cyber Ship",
+                "Cyber Neon Ship",
                 "Ship Skins",
-                "A futuristic neon player ship skin.",
-                75
+                "A dark cyber ship with purple neon lights.",
+                75,
+                "ship_cyber_neon.png"
+            ),
+
+            new ShopItem(
+                "DefaultBullet",
+                "Default Bullet",
+                "Bullet Styles",
+                "Original player bullet.",
+                0,
+                "Bullet_player.png"
             ),
 
             new ShopItem(
                 "GreenBullet",
                 "Green Bullet",
                 "Bullet Styles",
-                "Changes player bullets to a green energy style.",
-                30
+                "Changes player bullets to green energy shots.",
+                30,
+                "bullet_player_green.png"
             ),
 
             new ShopItem(
                 "PlasmaBullet",
                 "Plasma Bullet",
                 "Bullet Styles",
-                "Changes player bullets to a stronger plasma visual style.",
-                55
+                "Changes player bullets to purple plasma shots.",
+                55,
+                "bullet_player_plasma.png"
+            ),
+
+            new ShopItem(
+                "DefaultBackground",
+                "Default Space",
+                "Background Themes",
+                "Original space background.",
+                0,
+                "backgound_defult.jpg"
             ),
 
             new ShopItem(
                 "BlueNebulaBackground",
                 "Blue Nebula",
                 "Background Themes",
-                "A blue galaxy style background for gameplay.",
-                50
+                "A blue space background theme.",
+                50,
+                "back1.jpg"
             ),
 
             new ShopItem(
                 "PinkGalaxyBackground",
                 "Pink Galaxy",
                 "Background Themes",
-                "A pink and purple galaxy background theme.",
-                60
+                "A pink and purple galaxy background.",
+                60,
+                "back2.jpg"
+            ),
+
+            new ShopItem(
+                "MarsBackground",
+                "Mars Desert",
+                "Background Themes",
+                "A warm orange space background.",
+                65,
+                "back3.jpg"
             ),
 
             new ShopItem(
                 "ExtraLifeBooster",
                 "Extra Life",
                 "Boosters",
-                "Start the next game with 4 lives instead of 3.",
-                100
+                "Start the next game with 4 lives.",
+                100,
+                "icon_extra_life.png"
             )
         };
 
-        private static readonly HashSet<string> _purchasedItems = new HashSet<string>();
+        private static readonly HashSet<string> _purchasedItems = new HashSet<string>
+        {
+            "DefaultShip",
+            "DefaultBullet",
+            "DefaultBackground"
+        };
 
-        public static IReadOnlyList<ShopItem> Items => _items;
+        public static IReadOnlyList<ShopItem> Items
+        {
+            get { return _items; }
+        }
 
         public static bool IsPurchased(string itemId)
         {
+            if (itemId == "DefaultShip" ||
+                itemId == "DefaultBullet" ||
+                itemId == "DefaultBackground")
+                return true;
+
             return _purchasedItems.Contains(itemId);
         }
 
@@ -100,10 +164,24 @@ namespace GameEntity
                 return false;
             }
 
-            if (IsPurchased(itemId))
+            if (item.Id == "ExtraLifeBooster")
             {
-                message = "You already own this item.";
-                return false;
+                if (!CoinManager.SpendCoins(item.Price))
+                {
+                    message = "Not enough coins.";
+                    return false;
+                }
+
+                GameSettings.ExtraLifeBoosterEnabled = true;
+                message = "Extra Life booster activated for the next game.";
+                return true;
+            }
+
+            if (IsPurchased(item.Id))
+            {
+                EquipItem(item.Id);
+                message = "Item equipped.";
+                return true;
             }
 
             if (!CoinManager.SpendCoins(item.Price))
@@ -112,36 +190,39 @@ namespace GameEntity
                 return false;
             }
 
-            _purchasedItems.Add(itemId);
-            EquipItem(itemId);
+            _purchasedItems.Add(item.Id);
+            EquipItem(item.Id);
 
-            message = "Item purchased successfully.";
+            message = "Item purchased and equipped.";
             return true;
         }
 
         public static void EquipItem(string itemId)
         {
-            ShopItem item = FindItem(itemId);
+            switch (itemId)
+            {
+                case "DefaultShip":
+                case "FalconShip":
+                case "CyberShip":
+                    GameSettings.EquippedShipSkin = itemId;
+                    break;
 
-            if (item == null)
-                return;
+                case "DefaultBullet":
+                case "GreenBullet":
+                case "PlasmaBullet":
+                    GameSettings.EquippedBulletStyle = itemId;
+                    break;
 
-            if (item.Category == "Ship Skins")
-            {
-                GameSettings.EquippedShipSkin = item.Id;
-            }
-            else if (item.Category == "Bullet Styles")
-            {
-                GameSettings.EquippedBulletStyle = item.Id;
-            }
-            else if (item.Category == "Background Themes")
-            {
-                GameSettings.EquippedBackground = item.Id;
-            }
-            else if (item.Category == "Boosters")
-            {
-                if (item.Id == "ExtraLifeBooster")
+                case "DefaultBackground":
+                case "BlueNebulaBackground":
+                case "PinkGalaxyBackground":
+                case "MarsBackground":
+                    GameSettings.EquippedBackground = itemId;
+                    break;
+
+                case "ExtraLifeBooster":
                     GameSettings.ExtraLifeBoosterEnabled = true;
+                    break;
             }
         }
 
@@ -157,7 +238,7 @@ namespace GameEntity
                 return GameSettings.EquippedBackground == item.Id;
 
             if (item.Category == "Boosters")
-                return item.Id == "ExtraLifeBooster" && GameSettings.ExtraLifeBoosterEnabled;
+                return GameSettings.ExtraLifeBoosterEnabled;
 
             return false;
         }

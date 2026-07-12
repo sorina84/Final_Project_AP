@@ -14,10 +14,11 @@ namespace GameEntity
             List<Bullet> enemyBullets,
             List<PowerUp> powerUps,
             List<Coin> coins,
+            List<Explosion> explosions,
             int currentWave)
         {
             CheckPlayerBulletsWithEnemies(enemies, playerBullets, coins, currentWave);
-            CheckEnemiesWithPlayer(player, enemies);
+            CheckEnemiesWithPlayer(player, enemies, explosions);
             CheckEnemyBulletsWithPlayer(player, enemyBullets);
             CheckPowerUpsWithPlayer(player, powerUps);
             CheckCoinsWithPlayer(player, coins);
@@ -48,11 +49,9 @@ namespace GameEntity
                         {
                             enemy.IsActive = false;
 
-                            // امتیاز مستقیم اضافه می‌شود.
                             ScoreManager.AddScore(enemy.ScoreValue);
 
-                            // سکه مستقیم اضافه نمی‌شود؛ روی صفحه می‌افتد.
-                            TryDropCoins(enemy, coins, currentWave);
+                            TryDropCoin(enemy, coins, currentWave);
                         }
 
                         break;
@@ -61,40 +60,44 @@ namespace GameEntity
             }
         }
 
-        private static void TryDropCoins(Enemy enemy, List<Coin> coins, int currentWave)
+        private static void TryDropCoin(Enemy enemy, List<Coin> coins, int currentWave)
         {
-            double dropChance = 0.25 + currentWave * 0.02;
-            double goldChance = 0.05 + currentWave * 0.015;
-            int dropCount = 1;
+            double dropChance = 0.25;
+            double goldChance = 0.08;
+            int count = 1;
 
             if (enemy is ScoutEnemy)
             {
-                dropChance += 0.10;
+                dropChance = 0.30;
+                goldChance = 0.08;
             }
             else if (enemy is ShooterEnemy)
             {
-                dropChance += 0.20;
-                goldChance += 0.08;
-            }
-            else if (enemy is HeavyTankEnemy)
-            {
-                dropChance += 0.50;
-                goldChance += 0.25;
-                dropCount = 2;
+                dropChance = 0.40;
+                goldChance = 0.16;
             }
             else if (enemy is TerroristEnemy)
             {
-                dropChance += 0.30;
-                goldChance += 0.15;
+                dropChance = 0.45;
+                goldChance = 0.18;
+            }
+            else if (enemy is HeavyTankEnemy)
+            {
+                dropChance = 1.00;
+                goldChance = 0.45;
+                count = 2;
             }
 
-            if (dropChance > 0.95)
-                dropChance = 0.95;
+            dropChance += currentWave * 0.01;
+            goldChance += currentWave * 0.005;
 
-            if (goldChance > 0.70)
-                goldChance = 0.70;
+            if (dropChance > 0.85)
+                dropChance = 0.85;
 
-            for (int i = 0; i < dropCount; i++)
+            if (goldChance > 0.55)
+                goldChance = 0.55;
+
+            for (int i = 0; i < count; i++)
             {
                 if (_random.NextDouble() > dropChance)
                     continue;
@@ -103,31 +106,51 @@ namespace GameEntity
                     ? CoinType.Gold
                     : CoinType.Silver;
 
-                float offsetX = _random.Next(-15, 16);
-                float offsetY = _random.Next(-10, 11);
+                float offsetX = _random.Next(-12, 13);
+                float offsetY = _random.Next(-12, 13);
 
                 coins.Add(new Coin(enemy.X + offsetX, enemy.Y + offsetY, type));
             }
         }
 
-        private static void CheckEnemiesWithPlayer(Player player, List<Enemy> enemies)
+        private static void CheckEnemiesWithPlayer(
+            Player player,
+            List<Enemy> enemies,
+            List<Explosion> explosions)
         {
             foreach (Enemy enemy in enemies)
             {
                 if (!enemy.IsActive || !player.IsActive)
                     continue;
 
-                if (enemy.Bounds.IntersectsWith(player.Bounds))
-                {
-                    enemy.IsActive = false;
+                if (!enemy.Bounds.IntersectsWith(player.Bounds))
+                    continue;
 
-                    if (!player.IsShield)
-                    {
-                        int damage = enemy is TerroristEnemy ? 50 : 20;
-                        DamagePlayer(player, damage);
-                    }
+                if (enemy is TerroristEnemy)
+                {
+                    ExplodeTerrorist(player, enemy, explosions);
+                    continue;
                 }
+
+                enemy.IsActive = false;
+
+                if (!player.IsShield)
+                    DamagePlayer(player, 20);
             }
+        }
+
+        private static void ExplodeTerrorist(
+            Player player,
+            Enemy enemy,
+            List<Explosion> explosions)
+        {
+            enemy.IsActive = false;
+
+            if (explosions != null)
+                explosions.Add(new Explosion(enemy.X, enemy.Y));
+
+            if (!player.IsShield)
+                DamagePlayer(player, 50);
         }
 
         private static void CheckEnemyBulletsWithPlayer(Player player, List<Bullet> enemyBullets)
@@ -142,9 +165,7 @@ namespace GameEntity
                     bullet.IsActive = false;
 
                     if (!player.IsShield)
-                    {
                         DamagePlayer(player, bullet.Damage);
-                    }
                 }
             }
         }

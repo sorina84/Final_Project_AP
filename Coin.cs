@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 
 namespace GameEntity
@@ -16,46 +15,38 @@ namespace GameEntity
         public int Size { get; private set; }
 
         private Image _sprite;
+        private float _lifeTimer;
 
         public RectangleF Bounds
         {
             get
             {
-                return new RectangleF(X - Size / 2f, Y - Size / 2f, Size, Size);
+                return new RectangleF(
+                    X - Size / 2f,
+                    Y - Size / 2f,
+                    Size,
+                    Size
+                );
             }
         }
 
         public Coin(float x, float y, CoinType type)
-            : base(x, y, 90f)
+            : base(x, y, 0f)
         {
             Type = type;
+            _lifeTimer = 8f;
 
             if (type == CoinType.Gold)
             {
                 Value = 5;
-                Size = 26;
+                Size = 28;
+                _sprite = AssetLoader.LoadImage("coin_gold.png");
             }
             else
             {
                 Value = 1;
-                Size = 22;
-            }
-
-            LoadSprite();
-        }
-
-        private void LoadSprite()
-        {
-            try
-            {
-                if (Type == CoinType.Gold)
-                    _sprite = Image.FromFile("Assets/coin_gold.png");
-                else
-                    _sprite = Image.FromFile("Assets/coin_silver.png");
-            }
-            catch
-            {
-                _sprite = null;
+                Size = 24;
+                _sprite = AssetLoader.LoadImage("coin_silver.png");
             }
         }
 
@@ -64,9 +55,9 @@ namespace GameEntity
             if (!IsActive)
                 return;
 
-            Y += Speed * deltaTime;
+            _lifeTimer -= deltaTime;
 
-            if (Y > 650)
+            if (_lifeTimer <= 0f)
                 IsActive = false;
         }
 
@@ -77,15 +68,15 @@ namespace GameEntity
 
             if (_sprite != null)
             {
-                g.DrawImage(_sprite, X - Size / 2f, Y - Size / 2f, Size, Size);
+                g.DrawImage(_sprite, Bounds);
                 return;
             }
 
-            Brush fillBrush = Type == CoinType.Gold ? Brushes.Gold : Brushes.Silver;
-            Pen borderPen = Type == CoinType.Gold ? Pens.Orange : Pens.White;
+            Brush brush = Type == CoinType.Gold ? Brushes.Gold : Brushes.Silver;
+            Pen pen = Type == CoinType.Gold ? Pens.Orange : Pens.White;
 
-            g.FillEllipse(fillBrush, Bounds);
-            g.DrawEllipse(borderPen, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
+            g.FillEllipse(brush, Bounds);
+            g.DrawEllipse(pen, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
         }
     }
 }

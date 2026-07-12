@@ -65,7 +65,7 @@ namespace GameEntity
         {
             try
             {
-                Sprite = AssetLoader.LoadImage("player.png");
+                Sprite = AssetLoader.LoadImage("C:/Users/negar/source/repos/SpaceShooter/SpaceShooter/Assets/player.png");
             }
             catch
             {
@@ -106,6 +106,7 @@ namespace GameEntity
                 return bullets;
 
             _timeSinceLastShot = 0f;
+            AudioManager.PlayShoot();
 
             float bulletSpeed = 520f;
 

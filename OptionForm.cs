@@ -6,7 +6,7 @@ using GameEntity;
 
 namespace SpaceShooter
 {
-    public class OptionsForm : Form
+    public partial class OptionsForm : Form
     {
         private readonly Color _neonBlue = Color.FromArgb(0, 210, 255);
         private readonly Color _neonPink = Color.FromArgb(255, 70, 180);
@@ -51,18 +51,27 @@ namespace SpaceShooter
             Controls.Add(title);
 
             CheckBox musicCheckBox = CreateCheckBox("Music Enabled", 90, 115);
-            musicCheckBox.Checked = GameSettings.MusicEnabled;
+            musicCheckBox.Checked = AudioManager.MusicEnabled;
             musicCheckBox.CheckedChanged += (sender, e) =>
             {
-                GameSettings.MusicEnabled = musicCheckBox.Checked;
+                AudioManager.MusicEnabled = musicCheckBox.Checked;
+
+                if (AudioManager.MusicEnabled)
+                {
+                    AudioManager.PlayMenuMusic();
+                }
+                else
+                {
+                    AudioManager.StopMusic();
+                }
             };
             Controls.Add(musicCheckBox);
 
             CheckBox sfxCheckBox = CreateCheckBox("Sound Effects Enabled", 90, 160);
-            sfxCheckBox.Checked = GameSettings.SfxEnabled;
+            sfxCheckBox.Checked = AudioManager.SoundEnabled;
             sfxCheckBox.CheckedChanged += (sender, e) =>
             {
-                GameSettings.SfxEnabled = sfxCheckBox.Checked;
+                AudioManager.SoundEnabled = sfxCheckBox.Checked;
             };
             Controls.Add(sfxCheckBox);
 

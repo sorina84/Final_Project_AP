@@ -174,6 +174,7 @@ namespace GameEntity
                 if (coin.Bounds.IntersectsWith(player.Bounds))
                 {
                     CoinManager.AddCoins(coin.Value);
+                    AudioManager.PlayCoin();
                     coin.IsActive = false;
                 }
             }

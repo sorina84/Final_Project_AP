@@ -1,6 +1,13 @@
 # Project_AP
 Project Ap Space Shooter
 
+## Student Information
+
+Name: Sorina Afshary
+Student ID:403433033
+
+Name: Negar Ehsanipoor
+Student ID:403471006
 
 
 # Project Overview

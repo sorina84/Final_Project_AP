@@ -8,6 +8,9 @@ namespace SpaceShooter
 {
     public partial class MainMenuForm : Form
     {
+        //
+        private DataManager dataManager;
+        //
         private readonly Color _darkBlue = Color.FromArgb(15, 18, 32);
         private readonly Color _panelGray = Color.FromArgb(35, 39, 55);
         private readonly Color _neonBlue = Color.FromArgb(0, 210, 255);
@@ -24,6 +27,16 @@ namespace SpaceShooter
             DoubleBuffered = true;
 
             BuildMenu();
+            //
+            dataManager = new DataManager();
+            PlayerData data = dataManager.LoadPlayerData();
+            CoinManager.SetCoins(data.TotalCoins);
+            ScoreManager.SetScore(data.HighScore);
+            GameSettings.EquippedShipSkin = data.EquippedShipSkin;
+            GameSettings.EquippedBulletStyle = data.EquippedBulletStyle;
+            GameSettings.EquippedBackground = data.EquippedBackground;
+            AudioManager.MusicEnabled = data.MusicEnabled;
+            AudioManager.SoundEnabled = data.SfxEnabled;
         }
 
         //new for music
@@ -205,6 +218,25 @@ namespace SpaceShooter
 
         private void QuitButton_Click(object sender, EventArgs e)
         {
+            DataManager manager = new DataManager();
+            PlayerData data = new PlayerData();
+            data.TotalCoins = CoinManager.Coins;
+            data.HighScore = ScoreManager.Score;
+            data.EquippedShipSkin = GameSettings.EquippedShipSkin;
+            data.EquippedBulletStyle =
+            GameSettings.EquippedBulletStyle;
+            data.EquippedBackground =
+            GameSettings.EquippedBackground;
+            data.MusicEnabled =
+            AudioManager.MusicEnabled;
+            data.SfxEnabled =
+            AudioManager.SoundEnabled;
+            data.ExtraLifeBoosterEnabled =
+            GameSettings.ExtraLifeBoosterEnabled;
+            manager.SavePlayerData(data);
+
+
+
             AudioManager.StopMusic();
             Close();
         }

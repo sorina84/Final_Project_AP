@@ -133,7 +133,7 @@ The database file is automatically created when the game starts.
 
 
 # Project Architecture
-SpaceShooter
+```SpaceShooter
 │
 ├── Forms
 │   ├── MainMenuForm
@@ -164,7 +164,7 @@ SpaceShooter
 ├── ShooterEnemy
 ├── HeavyTankEnemy
 └── TerroristEnemy
-
+```
 
 # Object-Oriented Design
 

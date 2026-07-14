@@ -6,7 +6,7 @@ using GameEntity;
 
 namespace SpaceShooter
 {
-    public class ShopForm : Form
+    public partial class ShopForm : Form
     {
         private readonly Color _neonBlue = Color.FromArgb(0, 210, 255);
         private readonly Color _neonPink = Color.FromArgb(255, 70, 180);
@@ -377,6 +377,7 @@ namespace SpaceShooter
             {
                 ShopManager.EquipItem(item.Id);
                 BuildShop();
+                SaveData();
                 return;
             }
 
@@ -427,6 +428,19 @@ namespace SpaceShooter
             button.Cursor = Cursors.Hand;
 
             return button;
+        }
+        private void SaveData()
+        {
+            DataManager manager = new DataManager();
+            PlayerData data = new PlayerData();
+            data.TotalCoins = CoinManager.Coins;
+            data.EquippedShipSkin = GameSettings.EquippedShipSkin;
+            data.EquippedBulletStyle = GameSettings.EquippedBulletStyle;
+
+            data.EquippedBackground = GameSettings.EquippedBackground;
+
+
+            manager.SavePlayerData(data);
         }
     }
 }
